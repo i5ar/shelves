@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 
 from __future__ import absolute_import, unicode_literals
 
+from django.utils.translation import ugettext_lazy as _
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
@@ -56,6 +58,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
+    
+    'django.middleware.locale.LocaleMiddleware', # Middleware order matters
+
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -83,6 +88,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
+                'django.template.context_processors.i18n', # locale
             ],
         },
     },
@@ -114,6 +121,19 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+
+# Locale
+# http://stackoverflow.com/questions/38806553/how-to-install-gnu-gettext-0-15-on-windows-so-i-can-produce-po-mo-files-in
+# http://stackoverflow.com/questions/16768809/django-internationalization-minimal-example
+LOCALE_PATHS = (
+    os.path.join(os.path.join(BASE_DIR, 'conf'), 'locale'),
+)
+
+LANGUAGES = (
+    ('en', _('English')),
+    ('it', _('Italian'))
+)
 
 
 # Static files (CSS, JavaScript, Images)

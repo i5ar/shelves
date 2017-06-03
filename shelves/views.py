@@ -18,16 +18,21 @@ def import_data(request):
         form = UploadForm(request.POST, request.FILES)
         if form.is_valid():
             
-            '''NOTE: Moved directly to Upload model so we just need to save the form
-            csv_data = request.FILES['csv_file']
-            f = TextIOWrapper(request.FILES['csv_file'].file, encoding='utf-8', errors='replace') # Python 3
+            '''
+            Moved directly to Upload model so we just need to save the form
 
-            # dialect = csv.Sniffer().sniff(codecs.EncodedFile(csv_data, "utf-8").read(1024)) # Python 2
+            csv_data = request.FILES['csv_file']
+            f = TextIOWrapper(request.FILES['csv_file'].file, encoding='utf-8',
+                errors='replace') # Python 3
+
+            # dialect = csv.Sniffer().sniff(
+                codecs.EncodedFile(csv_data, "utf-8").read(1024)) # Python 2
             dialect = csv.Sniffer().sniff(f.read(1024)) # Python 3
 
             csv_data.open()
 
-            # has_header = csv.Sniffer().has_header(codecs.EncodedFile(csv_data, "utf-8").read(1024)) # Python 2
+            # has_header = csv.Sniffer().has_header(codecs.EncodedFile(
+                csv_data, "utf-8").read(1024)) # Python 2
             has_header = csv.Sniffer().has_header(f.read(1024)) # Python 3
 
             # csv_data.seek(0) # Python 2
@@ -35,27 +40,35 @@ def import_data(request):
 
             if has_header:
 
-                # reader = csv.DictReader(codecs.EncodedFile(csv_data, "utf-8"), delimiter=',', dialect=dialect) # Python 2
-                reader = csv.DictReader(f, delimiter=',', dialect=dialect) # Python 3
+                # reader = csv.DictReader(
+                    codecs.EncodedFile(csv_data, "utf-8"),
+                    delimiter=',',
+                    dialect=dialect) # Python 2
 
-                # NOTE: We do not need to skip the header if we use DictReader() instead of reader()
+                reader = csv.DictReader(
+                    f,
+                    delimiter=',',
+                    dialect=dialect) # Python 3
+
+                # NOTE: We do not need to skip the header if we use DictReader()
                 # next(reader)
 
                 for row in reader:
-                    obj, created = Customer.objects.get_or_create(nome=row['nome'], codice=row['codice'])
+                    obj, created = Customer.objects.get_or_create(
+                        name=row['name'], code=row['code'])
 
                 # Save the uploaded file in media
                 form.save()
 
             else:
-                raise ValidationError(_('The CSV file require an appropriate header '\
-                    'in order to spot the corresponding model fields.'), code='invalid')
+                raise ValidationError(_('The CSV file require a proper header '\
+                    'in order to spot the corresponding model fields.'),
+                    code='invalid')
 
             csv_data.close()
             '''
 
             form.save()
-
 
     else:
         form = UploadForm()

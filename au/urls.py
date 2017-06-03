@@ -9,13 +9,18 @@ from wagtail.wagtailadmin import urls as wagtailadmin_urls
 from wagtail.wagtailcore import urls as wagtail_urls
 from wagtail.wagtaildocs import urls as wagtaildocs_urls
 
+from django.conf.urls.i18n import i18n_patterns
+
 from shelves import urls as shelves_urls
 
-urlpatterns = [
+urlpatterns = i18n_patterns(
     url(r'^django-admin/', include(admin.site.urls)),
 
     url(r'^admin/', include(wagtailadmin_urls)),
     url(r'^documents/', include(wagtaildocs_urls)),
+
+    # https://docs.djangoproject.com/en/1.9/topics/i18n/translation/#the-set-language-redirect-view
+    url(r'^i18n/', include('django.conf.urls.i18n')),
 
     # NOTE: Shelves
     url(r'^shelves/', include(shelves_urls)),
@@ -30,7 +35,7 @@ urlpatterns = [
     # Alternatively, if you want Wagtail pages to be served from a subpath
     # of your site, rather than the site root:
     #    url(r'^pages/', include(wagtail_urls)),
-]
+)
 
 
 if settings.DEBUG:

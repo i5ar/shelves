@@ -2,21 +2,29 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.utils.translation import ugettext_lazy as _
+from django.db import IntegrityError
 
 import json
 import csv
 
 
 class Customer(models.Model):
-    codice = models.IntegerField()
-    nome = models.CharField(max_length=64, blank=True, null=True)
+    code = models.IntegerField(_('Code'), null=True, unique=True,
+        help_text=_('Customer code must not be confused with user code!'))
+    name = models.CharField(_('Name'), max_length=64, blank=True, null=True)
 
     def __str__(self):
-        return str(self.nome)
+        return str(self.name)
+
+    class Meta:
+        ordering = ['-name']
+        verbose_name = _('Customer')
+        verbose_name_plural = _('Customers')
 
 
 class BinAmbiguous(models.Model):
-    coordinate = models.CharField(unique=True, max_length=64, help_text="JSON values: Ex. [1, 2]")
+    coordinate = models.CharField(_('Coordinate'), unique=True, max_length=64,
+        help_text='JSON values: Ex. [1, 2]')
 
     # https://stackoverflow.com/questions/22340258/django-list-field-in-model
     def set_coordinate(self, coord):
@@ -38,47 +46,70 @@ class BinAmbiguous(models.Model):
                 raise ValidationError(e)
 
     def __str__(self):
-        return "{}".format(self.coordinate)
+        return '{}'.format(self.coordinate)
 
 
-BIN_HELP_TEXT = _("Please, use 0 if you can\'t assign coordinates.")
-class Bin(models.Model):
-    row = models.IntegerField(help_text=BIN_HELP_TEXT)
-    col = models.IntegerField(help_text=BIN_HELP_TEXT)
-    coordinate = models.CharField(max_length=64, blank=True)
-
-    def validate_unique(self, exclude=None):
-        if self.row != 0 and self.col != 0:
-            if Bin.objects.filter(row=self.row, col=self.col).exists():
-                raise ValidationError('Coordinate must be unique')
+class RegularShelf(models.Model):
+    name = models.CharField(_('Shelf name'), max_length=64, blank=True,
+        null=True)
+    cols = models.IntegerField(_('Columns'), help_text=_('Number of cols'))
+    rows = models.IntegerField(_('Rows'), help_text=_('Number of rows'))
 
     def save(self, *args, **kwargs):
-        list_int = [self.row, self.col]
-        self.coordinate = json.dumps(list_int)
-        super(Bin, self).save(*args, **kwargs)
+        super(RegularShelf, self).save(*args, **kwargs)
+        for col in range(self.cols):
+            for row in range(self.rows):
+                RegularBin(col=col+1, row=row+1, shelf=self).validate_unique()
+                RegularBin(col=col+1, row=row+1, shelf=self).save()
 
-    def __str__(self):
-        return "{}".format(self.coordinate)
-
-
-class Shelf(models.Model):
-    name = models.CharField(max_length=64, blank=True, null=True)
-        
     def __str__(self):
         return str(self.name)
 
+    class Meta:
+        verbose_name = _('Shelf')
+        verbose_name_plural = _('Shelves')
+
+
+class RegularBin(models.Model):
+    col = models.IntegerField(_('Column'))
+    row = models.IntegerField(_('Row'))
+    coordinate = models.CharField(_('Coordinate'), max_length=64, blank=True)
+    shelf = models.ForeignKey('RegularShelf', on_delete=models.CASCADE)
+
+    def validate_unique(self, exclude=None):
+        if RegularBin.objects.filter(
+                col=self.col, row=self.row, shelf=self.shelf).exists():
+            raise ValidationError(_('Coordinate must be unique'))
+
+    def save(self, *args, **kwargs):
+        list_int = [self.col, self.row]
+        self.coordinate = json.dumps(list_int)
+        super(RegularBin, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return '{} {}'.format(self.shelf, self.coordinate)
+
+    class Meta:
+        verbose_name = _('Bin')
+        verbose_name_plural = _('Bins')
+
 
 class Binder(models.Model):
-    biography = models.OneToOneField('Customer', on_delete=models.CASCADE, related_name="biography")
-    shelf = models.ForeignKey('Shelf', on_delete=models.CASCADE)
-    shelf_bin = models.ForeignKey('Bin', on_delete=models.CASCADE)
+    biography = models.OneToOneField('Customer', on_delete=models.CASCADE,
+        related_name='biography')
+    regular_bin = models.ForeignKey('RegularBin', on_delete=models.CASCADE,
+        null=True)
 
     def __str__(self):
         return str(self.biography)
 
+    class Meta:
+        verbose_name = _('Binder')
+        verbose_name_plural = _('Binders')
+
 
 class Upload(models.Model):
-    csv_file = models.FileField(upload_to='docs')
+    csv_file = models.FileField('File CSV', upload_to='docs')
 
     def save(self, *args, **kwargs):
         super(Upload, self).save(*args, **kwargs)
@@ -90,7 +121,32 @@ class Upload(models.Model):
             if has_header:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    obj, created = Customer.objects.get_or_create(nome=row['nome'], codice=row['codice'])
+                    try:
+                        obj, created = Customer.objects.get_or_create(
+                            name=row['name'], code=row['code'])
+                    except IntegrityError as e:
+                        '''
+                        Integrity error may happen if 2 customers have same code
+                        '''
+                        print('{0!r}'.format(e))
+                        raise ValidationError(e, code='quirky')
+                    except KeyError as e:
+                        '''
+                        Key error may happen if CSV header is divergent
+                        from model fields
+                        '''
+                        try:
+                            '''
+                            Pretend internationalized field names may match the
+                            CSV header
+                            '''
+                            obj, created = Customer.objects.get_or_create(
+                                name=row[_('name')], code=row[_('code')])
+                        except:
+                            raise ValidationError('Is the field {} present in '\
+                                'the CSV header?'.format(e), code='internation')
+
             else:
-                raise ValidationError(_('The CSV file require an appropriate header '\
-                    'in order to spot the corresponding model fields.'), code='invalid')
+                raise ValidationError(_('The CSV file require a proper header '\
+                    'in order to spot the corresponding model fields.'),
+                    code='invalid')
