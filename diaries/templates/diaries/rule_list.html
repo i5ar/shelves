@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<h2>Rule</h2>
+<ul>
+    {% for rule in object_list %}
+    <li>{{ rule }}
+        <ul>
+            <li>{{ rule.name }}</li>
+            <li>{{ rule.description }}</li>
+            <li>{{ rule.frequency }}</li>
+            {% if rule.params %}<li>{{ rule.params }}</li>{% endif %}
+        </ul>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}

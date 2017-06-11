@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<h2>Diaries</h2>
+<ul>
+	<li><a href="{% url 'diaries:calendars' %}">{% url 'diaries:calendars' %}</a></li>
+	<li><a href="{% url 'diaries:events' %}">{% url 'diaries:events' %}</a></li>
+	<li><a href="{% url 'diaries:rules' %}">{% url 'diaries:rules' %}</a></li>
+</ul>
+{% endblock %}

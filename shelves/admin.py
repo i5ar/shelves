@@ -2,13 +2,13 @@ from django.contrib import admin
 from django.utils.text import slugify
 from django.utils.translation import ugettext as _
 
-from . import models
+from .models import Customer, RegularShelf, RegularBin, Binder, Upload
 
 
 class CustomerAdmin(admin.ModelAdmin):
     list_display = ("code", "name")
 
-admin.site.register(models.Customer, CustomerAdmin)
+admin.site.register(Customer, CustomerAdmin)
 
 
 class RegularShelfAdmin(admin.ModelAdmin):
@@ -21,14 +21,14 @@ class RegularShelfAdmin(admin.ModelAdmin):
 
     list_display = ('name', 'get_size')
 
-admin.site.register(models.RegularShelf, RegularShelfAdmin)
+admin.site.register(RegularShelf, RegularShelfAdmin)
 
 class RegularBinAdmin(admin.ModelAdmin):
     list_display = ("id", "coordinate", "shelf")
     readonly_fields=('coordinate', )
     # prepopulated_fields = {"coordinate": ("row", "col",)}
 
-admin.site.register(models.RegularBin, RegularBinAdmin)
+admin.site.register(RegularBin, RegularBinAdmin)
 
 
 class BinderAdmin(admin.ModelAdmin):
@@ -41,10 +41,66 @@ class BinderAdmin(admin.ModelAdmin):
     list_display = ("biography", "get_biography_code", "regular_bin")
 
 
-admin.site.register(models.Binder, BinderAdmin)
+admin.site.register(Binder, BinderAdmin)
 
 
 class UploadAdmin(admin.ModelAdmin):
     list_display = ("csv_file", )
 
-admin.site.register(models.Upload, UploadAdmin)
+admin.site.register(Upload, UploadAdmin)
+
+
+# Wagtail
+from wagtail.contrib.modeladmin.options import (
+    ModelAdmin,
+    ModelAdminGroup,
+    modeladmin_register)
+
+
+class CustomerWagtailAdmin(ModelAdmin):
+    model = Customer
+    # menu_label = _('Customer')
+    list_display = ('name', 'code')
+    list_filter = ('name', 'code')
+    search_fields = ('name', 'code')
+    menu_icon = 'group'
+
+
+class RegularShelfWagtailAdmin(ModelAdmin):
+    model = RegularShelf
+    list_display = ('name', 'cols', 'rows')
+    menu_icon = 'table'
+
+
+class RegularBinWagtailAdmin(ModelAdmin):
+    model = RegularBin
+    # menu_label = _('Bin')
+    list_filter = ('shelf', )
+    list_display = ('shelf', 'coordinate')
+    menu_icon = 'placeholder'
+
+
+class BinderWagtailAdmin(ModelAdmin):
+    model = Binder
+    # menu_label = _('Binder')
+    list_display = ('biography', 'regular_bin')
+    list_filter = ('biography',)
+    search_fields = ('biography', )
+    menu_icon = 'folder-open-1'
+
+
+class UploadWagtailAdmin(ModelAdmin):
+    model = Upload
+    menu_icon = 'order-up'
+
+
+class ShelvesWagtailAdminGroup(ModelAdminGroup):
+    items = (
+        CustomerWagtailAdmin,
+        RegularShelfWagtailAdmin,
+        RegularBinWagtailAdmin,
+        BinderWagtailAdmin,
+        UploadWagtailAdmin)
+    menu_icon = 'table'
+
+modeladmin_register(ShelvesWagtailAdminGroup)

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<h2>Event</h2>
+<ul>
+    {% for event in object_list %}
+    <li>{{ event.title }}
+        <ul>
+            <li>{{ event.start }}</li>
+            <li>{{ event.end }}</li>
+            <li>{{ event.description }}</li>
+            <li>{{ event.creator }}</li>
+            <li>{{ event.created_on }}</li>
+            <li>{{ event.updated_on }}</li>
+            <li>{{ event.rule }}</li>
+            <li>{{ event.end_recurring_period }}</li>
+            <li>{{ event.calendar }}</li>
+            <li>{{ event.color_event }}</li>
+        </ul>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}

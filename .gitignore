@@ -36,11 +36,6 @@ media/
 static/
 
 
-# Apps
-home/
-search/
-
-
 # Shell commands
 activate.bat
 

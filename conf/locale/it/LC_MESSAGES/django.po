@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-06-03 19:07+0200\n"
+"POT-Creation-Date: 2017-06-10 00:53+0200\n"
 "PO-Revision-Date: 2017-06-03 19:08+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -17,117 +17,92 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 2.0.2\n"
 
-#: .\au\settings\base.py:134
+#: .\gerp\settings\base.py:143
 msgid "English"
 msgstr "Inglese"
 
-#: .\au\settings\base.py:135
+#: .\gerp\settings\base.py:144
 msgid "Italian"
 msgstr "Italiano"
 
-#: .\shelves\admin.py:19
-msgid "Size (colsxrows)"
-msgstr "Dimensione (colonnexrighe)"
+#~ msgid "Size (colsxrows)"
+#~ msgstr "Dimensione (colonnexrighe)"
 
-#: .\shelves\admin.py:40
-msgid "Customer code"
-msgstr "Codice cliente"
+#~ msgid "Customer code"
+#~ msgstr "Codice cliente"
 
-#: .\shelves\models.py:12
-msgid "Code"
-msgstr "Codice"
+#~ msgid "Shelves"
+#~ msgstr "Scaffali"
 
-#: .\shelves\models.py:13
-msgid "Customer code must not be confused with user code!"
-msgstr "Il codice cliente non deve essere confuso con il codice utente!"
+#~ msgid "Code"
+#~ msgstr "Codice"
 
-#: .\shelves\models.py:14
-msgid "Name"
-msgstr "Nome"
+#~ msgid "Customer code must not be confused with user code!"
+#~ msgstr "Il codice cliente non deve essere confuso con il codice utente!"
 
-#: .\shelves\models.py:21
-msgid "Customer"
-msgstr "Cliente"
+#~ msgid "Name"
+#~ msgstr "Nome"
 
-#: .\shelves\models.py:22
-msgid "Customers"
-msgstr "Clienti"
+#~ msgid "Customer"
+#~ msgstr "Cliente"
 
-#: .\shelves\models.py:26 .\shelves\models.py:76
-msgid "Coordinate"
-msgstr "Coordinate"
+#~ msgid "Customers"
+#~ msgstr "Clienti"
 
-#: .\shelves\models.py:53
-msgid "Shelf name"
-msgstr "Nome dello scaffale"
+#~ msgid "Coordinate"
+#~ msgstr "Coordinate"
 
-#: .\shelves\models.py:55
-msgid "Columns"
-msgstr "Colonne"
+#~ msgid "Shelf name"
+#~ msgstr "Nome dello scaffale"
 
-#: .\shelves\models.py:55
-msgid "Number of cols"
-msgstr "Numero di colonne"
+#~ msgid "Columns"
+#~ msgstr "Colonne"
 
-#: .\shelves\models.py:56
-msgid "Rows"
-msgstr "Righe"
+#~ msgid "Number of cols"
+#~ msgstr "Numero di colonne"
 
-#: .\shelves\models.py:56
-msgid "Number of rows"
-msgstr "Numero di righe"
+#~ msgid "Rows"
+#~ msgstr "Righe"
 
-#: .\shelves\models.py:69
-msgid "Shelf"
-msgstr "Scaffale"
+#~ msgid "Number of rows"
+#~ msgstr "Numero di righe"
 
-#: .\shelves\models.py:70
-msgid "Shelves"
-msgstr "Scaffali"
+#~ msgid "Shelf"
+#~ msgstr "Scaffale"
 
-#: .\shelves\models.py:74
-msgid "Column"
-msgstr "Colonna"
+#~ msgid "Column"
+#~ msgstr "Colonna"
 
-#: .\shelves\models.py:75
-msgid "Row"
-msgstr "Riga"
+#~ msgid "Row"
+#~ msgstr "Riga"
 
-#: .\shelves\models.py:82
-msgid "Coordinate must be unique"
-msgstr "Coordinata deve essere univoca"
+#~ msgid "Coordinate must be unique"
+#~ msgstr "Coordinata deve essere univoca"
 
-#: .\shelves\models.py:93
-msgid "Bin"
-msgstr "Ripiano"
+#~ msgid "Bin"
+#~ msgstr "Ripiano"
 
-#: .\shelves\models.py:94
-msgid "Bins"
-msgstr "Ripiani"
+#~ msgid "Bins"
+#~ msgstr "Ripiani"
 
-#: .\shelves\models.py:107
-msgid "Binder"
-msgstr "Faldone"
+#~ msgid "Binder"
+#~ msgstr "Faldone"
 
-#: .\shelves\models.py:108
-msgid "Binders"
-msgstr "Faldoni"
+#~ msgid "Binders"
+#~ msgstr "Faldoni"
 
-#: .\shelves\models.py:141
-msgid "name"
-msgstr "nome"
+#~ msgid "name"
+#~ msgstr "nome"
 
-#: .\shelves\models.py:141
-msgid "code"
-msgstr "codice"
+#~ msgid "code"
+#~ msgstr "codice"
 
-#: .\shelves\models.py:147
-msgid ""
-"The CSV file require a proper header in order to spot the corresponding "
-"model fields."
-msgstr ""
-"Il file CSV richiede un header appropriato per individuare il campo "
-"corrispondente."
+#~ msgid ""
+#~ "The CSV file require a proper header in order to spot the corresponding "
+#~ "model fields."
+#~ msgstr ""
+#~ "Il file CSV richiede un header appropriato per individuare il campo "
+#~ "corrispondente."
 
 #~ msgid "Regular bin"
 #~ msgstr "Ripiano regolare"

@@ -12,6 +12,18 @@ from wagtail.wagtaildocs import urls as wagtaildocs_urls
 from django.conf.urls.i18n import i18n_patterns
 
 from shelves import urls as shelves_urls
+from portables import urls as portables_urls
+from diaries import urls as diaries_urls
+
+
+# NOTE: Routers provide an easy way of automatically determining the URL conf.
+from rest_framework import routers
+# from accounts.api.views import UserViewSet
+from shelves.api.views import CustomerViewSet
+router = routers.DefaultRouter()
+# router.register(r'users', UserViewSet)
+router.register(r'customer', CustomerViewSet)
+
 
 urlpatterns = i18n_patterns(
     url(r'^django-admin/', include(admin.site.urls)),
@@ -19,11 +31,23 @@ urlpatterns = i18n_patterns(
     url(r'^admin/', include(wagtailadmin_urls)),
     url(r'^documents/', include(wagtaildocs_urls)),
 
+    # NOTE: Schedule
+    url(r'^schedule/', include('schedule.urls', namespace='schedule')),
+
+    # NOTE: Restframework
+    url(r'^api/', include(router.urls)),
+    url(r'^api/accounts/', include("accounts.api.urls", namespace='api-accounts')), # tutorial
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+
     # https://docs.djangoproject.com/en/1.9/topics/i18n/translation/#the-set-language-redirect-view
     url(r'^i18n/', include('django.conf.urls.i18n')),
 
     # NOTE: Shelves
     url(r'^shelves/', include(shelves_urls)),
+    # NOTE: Portables
+    url(r'^portables/', include(portables_urls)),
+    # NOTE: Diaries
+    url(r'^diaries/', include(diaries_urls, namespace='diaries')),
 
     url(r'^search/$', search_views.search, name='search'),
 
