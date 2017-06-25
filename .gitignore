@@ -23,6 +23,10 @@ wheels/
 *.egg
 
 
+# PyCharm
+.idea
+
+
 # Translations
 *.mo
 
@@ -42,3 +46,8 @@ activate.bat
 
 # Database
 *.sqlite3
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
