@@ -6,7 +6,7 @@ from .models import Customer, RegularShelf, RegularBin, Binder, Upload
 
 
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ("code", "name")
+    list_display = ("code", "user")
 
 admin.site.register(Customer, CustomerAdmin)
 
@@ -60,9 +60,9 @@ from wagtail.contrib.modeladmin.options import (
 class CustomerWagtailAdmin(ModelAdmin):
     model = Customer
     # menu_label = _('Customer')
-    list_display = ('name', 'code')
-    list_filter = ('name', 'code')
-    search_fields = ('name', 'code')
+    list_display = ('user', 'code')
+    list_filter = ('user', 'code')
+    search_fields = ('user', 'code')
     menu_icon = 'group'
 
 

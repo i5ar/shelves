@@ -3,21 +3,29 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.utils.translation import ugettext_lazy as _
 from django.db import IntegrityError
+from django.contrib.auth.models import User
 
 import json
 import csv
 
 
 class Customer(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     code = models.IntegerField(_('Code'), null=True, unique=True,
         help_text=_('Customer code must not be confused with user code!'))
-    name = models.CharField(_('Name'), max_length=64, blank=True, null=True)
+
+    @property
+    def name(self):
+        """Avoid breaking change.
+        The previus model had a `name` field so the property decorator will
+        prevent errors if a `customer.name` is used somewhere else.
+        """
+        return self.user.username
 
     def __str__(self):
-        return str(self.name)
+        return self.user.username
 
     class Meta:
-        ordering = ['-name']
         verbose_name = _('Customer')
         verbose_name_plural = _('Customers')
 
@@ -122,14 +130,17 @@ class Upload(models.Model):
                 reader = csv.DictReader(f)
                 for row in reader:
                     try:
-                        obj, created = Customer.objects.get_or_create(
-                            name=row['name'], code=row['code'])
+                        # TODO: Create user only if not exceptions occur
+                        user, created_user = User.objects.get_or_create(
+                            username=row['username'])
+                        cust, created_cust = Customer.objects.get_or_create(
+                            user=user, code=row['code'])
                     except IntegrityError as e:
                         '''
                         Integrity error may happen if 2 customers have same code
                         '''
                         print('{0!r}'.format(e))
-                        raise ValidationError(e, code='quirky')
+                        raise ValidationError(e, code='integrity')
                     except KeyError as e:
                         '''
                         Key error may happen if CSV header is divergent
@@ -137,14 +148,14 @@ class Upload(models.Model):
                         '''
                         try:
                             '''
-                            Pretend internationalized field names may match the
+                            Pretend internationalized field username match the
                             CSV header
                             '''
-                            obj, created = Customer.objects.get_or_create(
-                                name=row[_('name')], code=row[_('code')])
+                            cust, created_cust = Customer.objects.get_or_create(
+                                user=row[_('username')], code=row[_('code')])
                         except:
                             raise ValidationError('Is the field {} present in '\
-                                'the CSV header?'.format(e), code='internation')
+                                'the CSV header?'.format(e), code='key')
 
             else:
                 raise ValidationError(_('The CSV file require a proper header '\

@@ -17,7 +17,7 @@ def import_data(request):
     if request.method == 'POST':
         form = UploadForm(request.POST, request.FILES)
         if form.is_valid():
-            
+
             '''
             Moved directly to Upload model so we just need to save the form
 
@@ -54,6 +54,7 @@ def import_data(request):
                 # next(reader)
 
                 for row in reader:
+                    # Used in the previous Customer model
                     obj, created = Customer.objects.get_or_create(
                         name=row['name'], code=row['code'])
 

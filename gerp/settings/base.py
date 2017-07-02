@@ -65,6 +65,10 @@ INSTALLED_APPS = [
 
     'corsheaders', # if front and back end are on different ports
     'rest_framework',
+
+    # Token Authentication
+    # http://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [

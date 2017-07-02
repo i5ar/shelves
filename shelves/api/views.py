@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from rest_framework.generics import ListAPIView
 
 from rest_framework.permissions import (
     AllowAny,
@@ -6,14 +7,19 @@ from rest_framework.permissions import (
     IsAdminUser,
     IsAuthenticatedOrReadOnly)
 
-from .serializers import CustomerSerializer
 from ..models import Customer
+from .serializers import (
+    # CustomerSerializer,
+    CustomerHyperlinkedSerializer,
+)
 
-# ViewSets define the view behavior.
+
 class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
-    serializer_class = CustomerSerializer
-
-    # TODO: Change to permission
+    serializer_class = CustomerHyperlinkedSerializer
     permission_classes = [AllowAny]
-    
+
+#
+# class CustomerListAPIView(ListAPIView):
+#     queryset = Customer.objects.all()
+#     serializer_class = CustomerSerializer
