@@ -26,9 +26,13 @@ urlpatterns = i18n_patterns(
     url(r'^schedule/', include('schedule.urls', namespace='schedule')),
 
     # NOTE: Restframework
-    url(r'^api/shelves/', include('shelves.api.urls', namespace='shelves-api')),
-    url(r'^api/accounts/', include('accounts.api.urls', namespace='accounts-api')),
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url(r'^api/snippets/', include('snippets.urls')),
+    url(r'^api/shelves/', include(
+        'shelves.api.urls', namespace='shelves-api')),
+    url(r'^api/accounts/', include(
+        'accounts.api.urls', namespace='accounts-api')),
+    url(r'^api-auth/', include(
+        'rest_framework.urls', namespace='rest_framework')),
 
     # https://docs.djangoproject.com/en/1.9/topics/i18n/translation/#the-set-language-redirect-view
     url(r'^i18n/', include('django.conf.urls.i18n')),
@@ -60,4 +64,5 @@ if settings.DEBUG:
 
     # Serve static and media files from development server
     urlpatterns += staticfiles_urlpatterns()
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(
+        settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

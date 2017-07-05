@@ -57,14 +57,16 @@ INSTALLED_APPS = [
 
     'schedule',
 
-    'diaries', # require django-scheduler
+    'diaries',  # require django-scheduler
     'stocks',
     'shelves',
     'accounts',
     'portables',
 
-    'corsheaders', # if front and back end are on different ports
+    'corsheaders',  # if front and back end are on different ports
     'rest_framework',
+
+    'snippets',
 
     # Token Authentication
     # http://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication
@@ -73,11 +75,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
-
-    'corsheaders.middleware.CorsMiddleware', # django-cors-headers
-
-    'django.middleware.locale.LocaleMiddleware', # Middleware order matters
-
+    'corsheaders.middleware.CorsMiddleware',  # From django-cors-headers
+    'django.middleware.locale.LocaleMiddleware',  # Middleware order matters
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -105,7 +104,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'django.template.context_processors.i18n', # locale
+                'django.template.context_processors.i18n',  # Locale
             ],
         },
     },
@@ -140,8 +139,8 @@ USE_TZ = True
 
 
 # Locale
-# http://stackoverflow.com/questions/38806553/how-to-install-gnu-gettext-0-15-on-windows-so-i-can-produce-po-mo-files-in
-# http://stackoverflow.com/questions/16768809/django-internationalization-minimal-example
+# http://stackoverflow.com/questions/38806553/
+# http://stackoverflow.com/questions/16768809/
 LOCALE_PATHS = (
     os.path.join(os.path.join(BASE_DIR, 'conf'), 'locale'),
 )
@@ -175,10 +174,9 @@ MEDIA_URL = '/media/'
 
 WAGTAIL_SITE_NAME = "gerp"
 
-# Base URL to use when referring to full URLs within the Wagtail admin backend -
+# Base URL to use when referring to full URLs within the Wagtail admin backend
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 BASE_URL = 'http://example.com'
-
 
 
 # NOTE: Restframework
@@ -186,8 +184,9 @@ REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
+        'rest_framework.permissions.AllowAny'
+    ],
+    'PAGE_SIZE': 8
 }
 
 # NOTE: django-cors-headers

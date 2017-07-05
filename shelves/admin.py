@@ -2,11 +2,17 @@ from django.contrib import admin
 from django.utils.text import slugify
 from django.utils.translation import ugettext as _
 
+from wagtail.contrib.modeladmin.options import (
+    ModelAdmin,
+    ModelAdminGroup,
+    modeladmin_register)
+
 from .models import Customer, RegularShelf, RegularBin, Binder, Upload
 
 
 class CustomerAdmin(admin.ModelAdmin):
     list_display = ("code", "user")
+
 
 admin.site.register(Customer, CustomerAdmin)
 
@@ -21,12 +27,15 @@ class RegularShelfAdmin(admin.ModelAdmin):
 
     list_display = ('name', 'get_size')
 
+
 admin.site.register(RegularShelf, RegularShelfAdmin)
+
 
 class RegularBinAdmin(admin.ModelAdmin):
     list_display = ("id", "coordinate", "shelf")
-    readonly_fields=('coordinate', )
+    readonly_fields = ('coordinate', )
     # prepopulated_fields = {"coordinate": ("row", "col",)}
+
 
 admin.site.register(RegularBin, RegularBinAdmin)
 
@@ -47,14 +56,8 @@ admin.site.register(Binder, BinderAdmin)
 class UploadAdmin(admin.ModelAdmin):
     list_display = ("csv_file", )
 
+
 admin.site.register(Upload, UploadAdmin)
-
-
-# Wagtail
-from wagtail.contrib.modeladmin.options import (
-    ModelAdmin,
-    ModelAdminGroup,
-    modeladmin_register)
 
 
 class CustomerWagtailAdmin(ModelAdmin):
@@ -102,5 +105,6 @@ class ShelvesWagtailAdminGroup(ModelAdminGroup):
         BinderWagtailAdmin,
         UploadWagtailAdmin)
     menu_icon = 'table'
+
 
 modeladmin_register(ShelvesWagtailAdminGroup)

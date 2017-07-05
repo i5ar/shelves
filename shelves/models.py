@@ -11,8 +11,10 @@ import csv
 
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    code = models.IntegerField(_('Code'), null=True, unique=True,
-        help_text=_('Customer code must not be confused with user code!'))
+    code = models.IntegerField(
+        _('Code'), null=True, unique=True,
+        help_text=_('Customer code must not be confused with user code!')
+    )
 
     @property
     def name(self):
@@ -31,7 +33,8 @@ class Customer(models.Model):
 
 
 class BinAmbiguous(models.Model):
-    coordinate = models.CharField(_('Coordinate'), unique=True, max_length=64,
+    coordinate = models.CharField(
+        _('Coordinate'), unique=True, max_length=64,
         help_text='JSON values: Ex. [1, 2]')
 
     # https://stackoverflow.com/questions/22340258/django-list-field-in-model
@@ -47,8 +50,8 @@ class BinAmbiguous(models.Model):
             json.loads(self.coordinate)
         except ValueError as e:
             try:
-                list_str = self.coordinate.split(',') # ['1', '2']
-                list_int = list(map(int, list_str)) # [1, 2]
+                list_str = self.coordinate.split(',')  # ['1', '2']
+                list_int = list(map(int, list_str))  # [1, 2]
                 self.coordinate = json.dumps(list_int)
             except:
                 raise ValidationError(e)
@@ -58,7 +61,8 @@ class BinAmbiguous(models.Model):
 
 
 class RegularShelf(models.Model):
-    name = models.CharField(_('Shelf name'), max_length=64, blank=True,
+    name = models.CharField(
+        _('Shelf name'), max_length=64, blank=True,
         null=True)
     cols = models.IntegerField(_('Columns'), help_text=_('Number of cols'))
     rows = models.IntegerField(_('Rows'), help_text=_('Number of rows'))
@@ -103,10 +107,10 @@ class RegularBin(models.Model):
 
 
 class Binder(models.Model):
-    biography = models.OneToOneField('Customer', on_delete=models.CASCADE,
-        related_name='biography')
-    regular_bin = models.ForeignKey('RegularBin', on_delete=models.CASCADE,
-        null=True)
+    biography = models.OneToOneField(
+        'Customer', on_delete=models.CASCADE, related_name='biography')
+    regular_bin = models.ForeignKey(
+        'RegularBin', on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return str(self.biography)
@@ -137,7 +141,8 @@ class Upload(models.Model):
                             user=user, code=row['code'])
                     except IntegrityError as e:
                         '''
-                        Integrity error may happen if 2 customers have same code
+                        An integrity error may happen if two customers have the
+                        same code.
                         '''
                         print('{0!r}'.format(e))
                         raise ValidationError(e, code='integrity')
@@ -151,13 +156,16 @@ class Upload(models.Model):
                             Pretend internationalized field username match the
                             CSV header
                             '''
-                            cust, created_cust = Customer.objects.get_or_create(
+                            cust, created = Customer.objects.get_or_create(
                                 user=row[_('username')], code=row[_('code')])
                         except:
-                            raise ValidationError('Is the field {} present in '\
-                                'the CSV header?'.format(e), code='key')
+                            raise ValidationError(
+                                'Is the field {} present in the CSV file '
+                                'header?'.format(e),
+                                code='key')
 
             else:
-                raise ValidationError(_('The CSV file require a proper header '\
-                    'in order to spot the corresponding model fields.'),
+                raise ValidationError(
+                    _('The CSV file require a proper header in order to spot '
+                        'the corresponding model fields.'),
                     code='invalid')

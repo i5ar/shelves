@@ -50,7 +50,7 @@ def import_data(request):
                     delimiter=',',
                     dialect=dialect) # Python 3
 
-                # NOTE: We do not need to skip the header if we use DictReader()
+                # NOTE: We don't need to skip the header if we use DictReader()
                 # next(reader)
 
                 for row in reader:
@@ -62,8 +62,8 @@ def import_data(request):
                 form.save()
 
             else:
-                raise ValidationError(_('The CSV file require a proper header '\
-                    'in order to spot the corresponding model fields.'),
+                raise ValidationError(_('The CSV file require a proper '\
+                    'header in order to spot the corresponding model fields.'),
                     code='invalid')
 
             csv_data.close()
