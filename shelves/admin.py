@@ -7,7 +7,7 @@ from wagtail.contrib.modeladmin.options import (
     ModelAdminGroup,
     modeladmin_register)
 
-from .models import Customer, RegularShelf, RegularBin, Binder, Upload
+from .models import Customer, Shelf, Bin, Binder, Upload
 
 
 class CustomerAdmin(admin.ModelAdmin):
@@ -17,7 +17,7 @@ class CustomerAdmin(admin.ModelAdmin):
 admin.site.register(Customer, CustomerAdmin)
 
 
-class RegularShelfAdmin(admin.ModelAdmin):
+class ShelfAdmin(admin.ModelAdmin):
 
     def get_size(self, obj):
         return "{}x{}".format(obj.cols, obj.rows)
@@ -28,26 +28,26 @@ class RegularShelfAdmin(admin.ModelAdmin):
     list_display = ('name', 'get_size')
 
 
-admin.site.register(RegularShelf, RegularShelfAdmin)
+admin.site.register(Shelf, ShelfAdmin)
 
 
-class RegularBinAdmin(admin.ModelAdmin):
+class BinAdmin(admin.ModelAdmin):
     list_display = ("id", "coordinate", "shelf")
     readonly_fields = ('coordinate', )
     # prepopulated_fields = {"coordinate": ("row", "col",)}
 
 
-admin.site.register(RegularBin, RegularBinAdmin)
+admin.site.register(Bin, BinAdmin)
 
 
 class BinderAdmin(admin.ModelAdmin):
-    search_fields = ('biography__name', 'biography__code')
+    search_fields = ('customer__name', 'customer__code')
 
-    def get_biography_code(self, obj):
-        return obj.biography.code
+    def get_customer_code(self, obj):
+        return obj.customer.code
 
-    get_biography_code.short_description = _('Customer code')
-    list_display = ("biography", "get_biography_code", "regular_bin")
+    get_customer_code.short_description = _('Customer code')
+    list_display = ("customer", "get_customer_code", "bin")
 
 
 admin.site.register(Binder, BinderAdmin)
@@ -69,14 +69,14 @@ class CustomerWagtailAdmin(ModelAdmin):
     menu_icon = 'group'
 
 
-class RegularShelfWagtailAdmin(ModelAdmin):
-    model = RegularShelf
+class ShelfWagtailAdmin(ModelAdmin):
+    model = Shelf
     list_display = ('name', 'cols', 'rows')
     menu_icon = 'table'
 
 
-class RegularBinWagtailAdmin(ModelAdmin):
-    model = RegularBin
+class BinWagtailAdmin(ModelAdmin):
+    model = Bin
     # menu_label = _('Bin')
     list_filter = ('shelf', )
     list_display = ('shelf', 'coordinate')
@@ -86,9 +86,9 @@ class RegularBinWagtailAdmin(ModelAdmin):
 class BinderWagtailAdmin(ModelAdmin):
     model = Binder
     # menu_label = _('Binder')
-    list_display = ('biography', 'regular_bin')
-    list_filter = ('biography',)
-    search_fields = ('biography', )
+    list_display = ('customer', 'bin')
+    list_filter = ('customer',)
+    search_fields = ('customer', )
     menu_icon = 'folder-open-1'
 
 
@@ -100,8 +100,8 @@ class UploadWagtailAdmin(ModelAdmin):
 class ShelvesWagtailAdminGroup(ModelAdminGroup):
     items = (
         CustomerWagtailAdmin,
-        RegularShelfWagtailAdmin,
-        RegularBinWagtailAdmin,
+        ShelfWagtailAdmin,
+        BinWagtailAdmin,
         BinderWagtailAdmin,
         UploadWagtailAdmin)
     menu_icon = 'table'

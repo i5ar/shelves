@@ -4,32 +4,35 @@ from rest_framework import serializers
 
 from ..models import (
     Customer,
-    RegularBin,
-    RegularShelf,
+    Bin,
+    Shelf,
     Binder,
 )
 
 
-# class CustomerSerializer(serializers.ModelSerializer):
-#     """Used with CustomerListAPIView."""
-#     class Meta:
-#         model = Customer
-#         fields = ('code', 'user')
+from rest_framework.renderers import JSONRenderer
+from rest_framework.parsers import JSONParser
+from django.utils.six import BytesIO
+import json
 
 
-class CustomerHyperlinkedSerializer(serializers.HyperlinkedModelSerializer):
-    """Customer Serializers."""
+class UserSerializer(serializers.HyperlinkedModelSerializer):
 
-    # Since `user` is `OneToOneField` we must specify where does it come from
-    user = serializers.CharField(source='user.username')
+    customer = serializers.HyperlinkedRelatedField(
+        view_name='shelves-api:customer-detail', read_only=True)
 
     class Meta:
-        model = Customer
-        fields = ('user', 'code', 'url')
-        # http://www.django-rest-framework.org/api-guide/serializers/
+        model = User
+        fields = ('url', 'id', 'username', 'customer')
         extra_kwargs = {
-            'url': {'view_name': "shelves-api:customer-detail"},
+            'url': {'view_name': "shelves-api:user-detail"},
         }
+
+
+class CustomerSerializer(serializers.HyperlinkedModelSerializer):
+
+    '''
+    user = serializers.CharField()
 
     def create(self, validated_data):
         """Create a new customer.
@@ -37,9 +40,9 @@ class CustomerHyperlinkedSerializer(serializers.HyperlinkedModelSerializer):
         The `user` field as defined above is a username, so it must be
         converted in a User object
         """
-        _username = validated_data.get('user').get('username')
-        _user = User.objects.get(username=_username)
-        validated_data['user'] = _user
+        username = validated_data.get('user')
+        user = User.objects.get(username=username)
+        validated_data['user'] = user
         return Customer.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
@@ -48,61 +51,12 @@ class CustomerHyperlinkedSerializer(serializers.HyperlinkedModelSerializer):
         The `user` field as defined above is a username, so it must be
         converted in a User object
         """
-        _username = validated_data.get('user').get('username')
-        instance.user = User.objects.get(username=_username)
+        username = validated_data.get('user')
+        instance.user = User.objects.get(username=username)
         instance.code = validated_data.get('code', instance.code)
         instance.save()
         return instance
-
-
-class RegularBinHyperlinkedSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = RegularBin
-        fields = ('coordinate', 'url', 'shelf')
-        # http://www.django-rest-framework.org/api-guide/serializers/
-        extra_kwargs = {
-            'url': {'view_name': "shelves-api:regularbin-detail"},
-            'shelf': {'view_name': "shelves-api:regularshelf-detail"},
-        }
-
-
-class RegularShelfHyperlinkedSerializer(
-        serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = RegularShelf
-        fields = ('name', 'cols', 'rows', 'url')
-        extra_kwargs = {
-            'url': {'view_name': "shelves-api:regularshelf-detail"},
-        }
-
-
-class BinderHyperlinkedSerializer(serializers.HyperlinkedModelSerializer):
-    biography = serializers.CharField()
-
-    class Meta:
-        model = Binder
-        fields = ('biography', 'url', 'regular_bin')
-        extra_kwargs = {
-            'url': {'view_name': "shelves-api:binder-detail"},
-            'regular_bin': {'view_name': "shelves-api:regularbin-detail"},
-        }
-
-
-###############################################################################
-
-
-class RegularShelfSerializer(serializers.HyperlinkedModelSerializer):
-
-    class Meta:
-        model = RegularShelf
-        fields = ('url', 'name', 'cols', 'rows')
-        extra_kwargs = {
-            'url': {'view_name': "shelves-api:regularshelf-detail"},
-        }
-
-
-class CustomerSerializer(serializers.HyperlinkedModelSerializer):
-    # user = serializers.CharField(source='user.id')
+    '''
 
     class Meta:
         model = Customer
@@ -113,11 +67,65 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
         }
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class BinderSerializer(serializers.HyperlinkedModelSerializer):
+
+    '''
+    customer = serializers.CharField()
+
+    def create(self, validated_data):
+        """Create a new customer.
+
+        The `user` field as defined above is a username, so it must be
+        converted in a User object
+        """
+        username = validated_data.get('customer')
+        user = User.objects.get(username=username)
+        customer = Customer.objects.get(user=user)
+        validated_data['customer'] = customer
+        return Binder.objects.create(**validated_data)
+    '''
 
     class Meta:
-        model = User
-        fields = ('url', 'id', 'username')
+        model = Binder
+        fields = ('url', 'customer', 'bin', 'color')
         extra_kwargs = {
-            'url': {'view_name': "shelves-api:user-detail"},
+            'url': {'view_name': "shelves-api:binder-detail"},
+            'customer': {'view_name': "shelves-api:customer-detail"},
+            'bin': {'view_name': "shelves-api:bin-detail"},
+        }
+
+
+class BinSerializer(serializers.HyperlinkedModelSerializer):
+
+    binder_set = BinderSerializer(many=True, read_only=True)
+
+    col_row = serializers.SerializerMethodField('set_col_row')
+
+    def set_col_row(self, obj):
+        """Define a custom field instead of coordinate field."""
+        return [obj.col, obj.row]
+
+    class Meta:
+        model = Bin
+        fields = ('url', 'col_row', 'binder_set')
+        extra_kwargs = {
+            'url': {'view_name': "shelves-api:bin-detail"},
+        }
+
+
+class ShelfSerializer(serializers.HyperlinkedModelSerializer):
+    """Writable nested serializers.
+
+    TODO: Write from shelf
+    http://www.django-rest-framework.org/api-guide/relations/#writable-nested-serializers
+    """
+
+    # bin_set = serializers.StringRelatedField(many=True)
+    bin_set = BinSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Shelf
+        fields = ('url', 'name', 'cols', 'rows', 'bin_set')
+        extra_kwargs = {
+            'url': {'view_name': "shelves-api:shelf-detail"},
         }

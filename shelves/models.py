@@ -60,7 +60,7 @@ class BinAmbiguous(models.Model):
         return '{}'.format(self.coordinate)
 
 
-class RegularShelf(models.Model):
+class Shelf(models.Model):
     name = models.CharField(
         _('Shelf name'), max_length=64, blank=True,
         null=True)
@@ -68,11 +68,11 @@ class RegularShelf(models.Model):
     rows = models.IntegerField(_('Rows'), help_text=_('Number of rows'))
 
     def save(self, *args, **kwargs):
-        super(RegularShelf, self).save(*args, **kwargs)
+        super(Shelf, self).save(*args, **kwargs)
         for col in range(self.cols):
             for row in range(self.rows):
-                RegularBin(col=col+1, row=row+1, shelf=self).validate_unique()
-                RegularBin(col=col+1, row=row+1, shelf=self).save()
+                Bin(col=col+1, row=row+1, shelf=self).validate_unique()
+                Bin(col=col+1, row=row+1, shelf=self).save()
 
     def __str__(self):
         return str(self.name)
@@ -82,21 +82,22 @@ class RegularShelf(models.Model):
         verbose_name_plural = _('Shelves')
 
 
-class RegularBin(models.Model):
+class Bin(models.Model):
     col = models.IntegerField(_('Column'))
     row = models.IntegerField(_('Row'))
     coordinate = models.CharField(_('Coordinate'), max_length=64, blank=True)
-    shelf = models.ForeignKey('RegularShelf', on_delete=models.CASCADE)
+    shelf = models.ForeignKey(
+        Shelf, on_delete=models.CASCADE)
 
     def validate_unique(self, exclude=None):
-        if RegularBin.objects.filter(
+        if Bin.objects.filter(
                 col=self.col, row=self.row, shelf=self.shelf).exists():
             raise ValidationError(_('Coordinate must be unique'))
 
     def save(self, *args, **kwargs):
         list_int = [self.col, self.row]
         self.coordinate = json.dumps(list_int)
-        super(RegularBin, self).save(*args, **kwargs)
+        super(Bin, self).save(*args, **kwargs)
 
     def __str__(self):
         return '{} {}'.format(self.shelf, self.coordinate)
@@ -107,13 +108,15 @@ class RegularBin(models.Model):
 
 
 class Binder(models.Model):
-    biography = models.OneToOneField(
-        'Customer', on_delete=models.CASCADE, related_name='biography')
-    regular_bin = models.ForeignKey(
-        'RegularBin', on_delete=models.CASCADE, null=True)
+    customer = models.OneToOneField(
+        'Customer', on_delete=models.CASCADE, related_name='customer')
+    bin = models.ForeignKey(
+        Bin, on_delete=models.CASCADE, null=True)
+    color = models.CharField(
+        _('Color'), blank=True, max_length=6, help_text=_('Hex value.'))
 
     def __str__(self):
-        return str(self.biography)
+        return '{}'.format(self.color)
 
     class Meta:
         verbose_name = _('Binder')
