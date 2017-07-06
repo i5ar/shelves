@@ -7,39 +7,66 @@ from wagtail.contrib.modeladmin.options import (
     ModelAdminGroup,
     modeladmin_register)
 
-from .models import Customer, Shelf, Bin, Binder, Upload
+from .models import Customer, Shelf, Bin, Container, Binder, Upload
 
 
+@admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
     list_display = ("code", "user")
 
 
-admin.site.register(Customer, CustomerAdmin)
-
-
+@admin.register(Shelf)
 class ShelfAdmin(admin.ModelAdmin):
 
-    def get_size(self, obj):
-        return "{}x{}".format(obj.cols, obj.rows)
+    fields = ('name', 'desc', ('cols', 'rows'), 'nums')
 
-    get_size.short_description = _("Size (colsxrows)")
-    get_size.empty_value_display = '?'
+    def view_size(self, obj):
+        if obj.cols and obj.rows:
+            return "{}x{}".format(obj.cols, obj.rows)
 
-    list_display = ('name', 'get_size')
+    view_size.short_description = _("Size (colsxrows)")
+    view_size.empty_value_display = '???'
+
+    list_display = ('name', 'desc', 'view_size', 'nums', 'id')
+
+    def get_readonly_fields(self, request, obj=None):
+        """Define readonly fields.
+
+        The shelf cannot change size once it is defined.
+        """
+        if obj is None:
+            return []
+        return ['cols', 'rows', 'nums']
 
 
-admin.site.register(Shelf, ShelfAdmin)
-
-
+@admin.register(Bin)
 class BinAdmin(admin.ModelAdmin):
-    list_display = ("id", "coordinate", "shelf")
-    readonly_fields = ('coordinate', )
-    # prepopulated_fields = {"coordinate": ("row", "col",)}
+    list_display = ('id', 'shelf', 'row', 'col')
+    readonly_fields = ('shelf', 'row', 'col')
+    # prepopulated_fields = {'coordinate': ('row', 'col',)}
+
+    fields = ('shelf', 'row', 'col')
+
+    # https://stackoverflow.com/questions/4043843/
+    def has_delete_permission(self, request, obj=None):
+        """Disable the delete link."""
+        return False
 
 
-admin.site.register(Bin, BinAdmin)
+@admin.register(Container)
+class ContainerAdmin(admin.ModelAdmin):
+    list_display = ('id', 'shelf', 'num')
+    readonly_fields = ('shelf', 'num')
+
+    fields = ('shelf', 'num')
+
+    # https://stackoverflow.com/questions/4043843/
+    def has_delete_permission(self, request, obj=None):
+        """Disable the delete link."""
+        return False
 
 
+@admin.register(Binder)
 class BinderAdmin(admin.ModelAdmin):
     search_fields = ('customer__name', 'customer__code')
 
@@ -47,17 +74,12 @@ class BinderAdmin(admin.ModelAdmin):
         return obj.customer.code
 
     get_customer_code.short_description = _('Customer code')
-    list_display = ("customer", "get_customer_code", "bin")
+    list_display = ('customer', 'get_customer_code', 'bin')
 
 
-admin.site.register(Binder, BinderAdmin)
-
-
+@admin.register(Upload)
 class UploadAdmin(admin.ModelAdmin):
     list_display = ("csv_file", )
-
-
-admin.site.register(Upload, UploadAdmin)
 
 
 class CustomerWagtailAdmin(ModelAdmin):
@@ -79,7 +101,7 @@ class BinWagtailAdmin(ModelAdmin):
     model = Bin
     # menu_label = _('Bin')
     list_filter = ('shelf', )
-    list_display = ('shelf', 'coordinate')
+    list_display = ('id', 'shelf', 'row', 'col')
     menu_icon = 'placeholder'
 
 

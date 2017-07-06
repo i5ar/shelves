@@ -87,7 +87,7 @@ class BinderSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Binder
-        fields = ('url', 'customer', 'bin', 'color')
+        fields = ('url', 'customer', 'bin', 'color', 'name', 'content')
         extra_kwargs = {
             'url': {'view_name': "shelves-api:binder-detail"},
             'customer': {'view_name': "shelves-api:customer-detail"},

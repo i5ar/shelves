@@ -62,17 +62,46 @@ class BinAmbiguous(models.Model):
 
 class Shelf(models.Model):
     name = models.CharField(
-        _('Shelf name'), max_length=64, blank=True,
-        null=True)
-    cols = models.IntegerField(_('Columns'), help_text=_('Number of cols'))
-    rows = models.IntegerField(_('Rows'), help_text=_('Number of rows'))
+        _('Name'), max_length=64,
+        help_text=_('A name for the shelf.'), unique=True)
+    desc = models.TextField(_('Description'),  blank=True)
+    cols = models.IntegerField(
+        _('Columns'), help_text=_('The number of cols'), blank=True, null=True)
+    rows = models.IntegerField(
+        _('Rows'), help_text=_('The number of rows'), blank=True, null=True)
+    nums = models.PositiveIntegerField(
+        _('Containers'), help_text=_('The number of containers'),
+        blank=True, null=True)
 
     def save(self, *args, **kwargs):
+        """Make sure appropriate fields are set."""
         super(Shelf, self).save(*args, **kwargs)
-        for col in range(self.cols):
-            for row in range(self.rows):
-                Bin(col=col+1, row=row+1, shelf=self).validate_unique()
-                Bin(col=col+1, row=row+1, shelf=self).save()
+        if self.cols and self.rows and not self.nums:
+            self.nums = self.cols*self.rows
+            for num in range(self.nums):
+                container = Container(num=num+1, shelf=self)
+                container.validate_unique()
+                container.save()
+            for col in range(self.cols):
+                for row in range(self.rows):
+                    bin = Bin(col=col+1, row=row+1, shelf=self)
+                    bin.validate_unique()
+                    bin.save()
+        elif not self.cols and not self.rows and self.nums:
+            for num in range(self.nums):
+                container = Container(num=num+1, shelf=self)
+                container.validate_unique()
+                container.save()
+        elif not self.cols and self.rows:
+            raise ValueError(
+                "The columns field is required within the rows field.")
+        elif self.cols and not self.rows:
+            raise ValueError(
+                "The rows field is required within the columns field.")
+        else:
+            raise ValueError()
+
+        super(Shelf, self).save(*args, **kwargs)
 
     def __str__(self):
         return str(self.name)
@@ -85,35 +114,55 @@ class Shelf(models.Model):
 class Bin(models.Model):
     col = models.IntegerField(_('Column'))
     row = models.IntegerField(_('Row'))
-    coordinate = models.CharField(_('Coordinate'), max_length=64, blank=True)
-    shelf = models.ForeignKey(
-        Shelf, on_delete=models.CASCADE)
+    # coordinate = models.CharField(_('Coordinate'), max_length=64, blank=True)
+    shelf = models.ForeignKey(Shelf, on_delete=models.CASCADE)
 
     def validate_unique(self, exclude=None):
         if Bin.objects.filter(
                 col=self.col, row=self.row, shelf=self.shelf).exists():
             raise ValidationError(_('Coordinate must be unique'))
 
-    def save(self, *args, **kwargs):
-        list_int = [self.col, self.row]
-        self.coordinate = json.dumps(list_int)
-        super(Bin, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     """Add a coordinate field based on the row and the column."""
+    #     list_int = [self.col, self.row]
+    #     self.coordinate = json.dumps(list_int)
+    #     super(Bin, self).save(*args, **kwargs)
 
     def __str__(self):
-        return '{} {}'.format(self.shelf, self.coordinate)
+        return '{} bin'.format(self.shelf)
 
     class Meta:
         verbose_name = _('Bin')
         verbose_name_plural = _('Bins')
 
 
+class Container(models.Model):
+    num = models.IntegerField(_('Number'))
+    shelf = models.ForeignKey(Shelf, on_delete=models.CASCADE)
+
+    def validate_unique(self, exclude=None):
+        if Container.objects.filter(
+                num=self.num, shelf=self.shelf).exists():
+            raise ValidationError(_('Number must be unique'))
+
+    def __str__(self):
+        return '{} container'.format(self.shelf)
+
+    class Meta:
+        verbose_name = _('Container')
+        verbose_name_plural = _('Containers')
+
+
 class Binder(models.Model):
     customer = models.OneToOneField(
-        'Customer', on_delete=models.CASCADE, related_name='customer')
-    bin = models.ForeignKey(
-        Bin, on_delete=models.CASCADE, null=True)
+        'Customer', on_delete=models.CASCADE, related_name='customer',
+        blank=True, null=True)
+    bin = models.ForeignKey(Bin, on_delete=models.CASCADE, null=True)
+    name = models.CharField(_('Binder name'), max_length=128, blank=True)
+    content = models.TextField(_('Binder content'), blank=True)
     color = models.CharField(
         _('Color'), blank=True, max_length=6, help_text=_('Hex value.'))
+    updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return '{}'.format(self.color)
