@@ -18,10 +18,15 @@ urlpatterns = [
     url(r'^binders/(?P<pk>[0-9]+)/$', views.BinderDetail.as_view(),
         name="binder-detail"),
 
-    url(r'^bins/$', views.BinList.as_view(),
-        name="bin-list"),
-    url(r'^bins/(?P<pk>[0-9]+)/$', views.BinDetail.as_view(),
-        name="bin-detail"),
+    url(r'^containers/$', views.ContainerList.as_view(),
+        name="container-list"),
+    url(r'^containers/(?P<pk>[0-9]+)/$', views.ContainerDetail.as_view(),
+        name="container-detail"),
+
+    url(r'^boards/$', views.BoardList.as_view(),
+        name="board-list"),
+    url(r'^boards/(?P<pk>[0-9]+)/$', views.BoardDetail.as_view(),
+        name="board-detail"),
 
     url(r'^shelves/$', views.ShelfList.as_view(),
         name="shelf-list"),

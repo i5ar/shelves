@@ -4,7 +4,8 @@ from rest_framework import serializers
 
 from ..models import (
     Customer,
-    Bin,
+    Board,
+    Container,
     Shelf,
     Binder,
 )
@@ -87,17 +88,14 @@ class BinderSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Binder
-        fields = ('url', 'customer', 'bin', 'color', 'name', 'content')
+        fields = ('url', 'customer', 'color', 'name', 'content')
         extra_kwargs = {
             'url': {'view_name': "shelves-api:binder-detail"},
             'customer': {'view_name': "shelves-api:customer-detail"},
-            'bin': {'view_name': "shelves-api:bin-detail"},
         }
 
 
-class BinSerializer(serializers.HyperlinkedModelSerializer):
-
-    binder_set = BinderSerializer(many=True, read_only=True)
+class BoardSerializer(serializers.HyperlinkedModelSerializer):
 
     col_row = serializers.SerializerMethodField('set_col_row')
 
@@ -106,26 +104,52 @@ class BinSerializer(serializers.HyperlinkedModelSerializer):
         return [obj.col, obj.row]
 
     class Meta:
-        model = Bin
-        fields = ('url', 'col_row', 'binder_set')
+        model = Board
+        fields = ('url', 'col_row')
         extra_kwargs = {
-            'url': {'view_name': "shelves-api:bin-detail"},
+            'url': {'view_name': "shelves-api:board-detail"},
         }
 
 
-class ShelfSerializer(serializers.HyperlinkedModelSerializer):
+class ContainerSerializer(serializers.HyperlinkedModelSerializer):
+
+    binder_set = BinderSerializer(many=True, read_only=True)
+    board_set = BoardSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Container
+        fields = ('url', 'num', 'binder_set', 'board_set')
+        extra_kwargs = {
+            'url': {'view_name': "shelves-api:container-detail"},
+        }
+
+
+class ShelfListSerializer(serializers.HyperlinkedModelSerializer):
     """Writable nested serializers.
 
     TODO: Write from shelf
     http://www.django-rest-framework.org/api-guide/relations/#writable-nested-serializers
     """
 
-    # bin_set = serializers.StringRelatedField(many=True)
-    bin_set = BinSerializer(many=True, read_only=True)
+    # container_set = serializers.StringRelatedField(many=True)
+    container_set = ContainerSerializer(many=True, read_only=True)
 
     class Meta:
         model = Shelf
-        fields = ('url', 'name', 'cols', 'rows', 'bin_set')
+        fields = ('url', 'name', 'cols', 'rows', 'nums', 'container_set')
         extra_kwargs = {
             'url': {'view_name': "shelves-api:shelf-detail"},
         }
+
+
+class ShelfDetailSerializer(serializers.HyperlinkedModelSerializer):
+
+    container_set = ContainerSerializer(many=True, read_only=True)
+    # Make dimensional fields read only
+    cols = serializers.IntegerField(read_only=True)
+    rows = serializers.IntegerField(read_only=True)
+    nums = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Shelf
+        fields = ('name', 'cols', 'rows', 'nums', 'container_set')

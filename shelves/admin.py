@@ -7,7 +7,7 @@ from wagtail.contrib.modeladmin.options import (
     ModelAdminGroup,
     modeladmin_register)
 
-from .models import Customer, Shelf, Bin, Container, Binder, Upload
+from .models import Customer, Shelf, Board, Container, Binder, Upload
 
 
 @admin.register(Customer)
@@ -18,7 +18,23 @@ class CustomerAdmin(admin.ModelAdmin):
 @admin.register(Shelf)
 class ShelfAdmin(admin.ModelAdmin):
 
-    fields = ('name', 'desc', ('cols', 'rows'), 'nums')
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'desc',)
+        }),
+        ('Size options', {
+            'classes': ('wide',),
+            'description': _(
+                "This option can be used for regular shelves."),
+            'fields': (('cols', 'rows'), ),
+        }),
+        ('Number options', {
+            'classes': ('wide',),
+            'description': _(
+                "This option can be used for irregular shelves. "),
+            'fields': ('nums', ),
+        }),
+    )
 
     def view_size(self, obj):
         if obj.cols and obj.rows:
@@ -32,20 +48,26 @@ class ShelfAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         """Define readonly fields.
 
-        The shelf cannot change size once it is defined.
+        Make dimensional fields readonly so the shelf cannot change size once
+        it is defined.
         """
         if obj is None:
             return []
         return ['cols', 'rows', 'nums']
 
 
-@admin.register(Bin)
-class BinAdmin(admin.ModelAdmin):
-    list_display = ('id', 'shelf', 'row', 'col')
-    readonly_fields = ('shelf', 'row', 'col')
+@admin.register(Board)
+class BoardAdmin(admin.ModelAdmin):
+    list_display = ('id', 'row', 'col', 'view_container_shelf')
+    readonly_fields = ('row', 'col')
     # prepopulated_fields = {'coordinate': ('row', 'col',)}
 
-    fields = ('shelf', 'row', 'col')
+    fields = ('row', 'col')
+
+    def view_container_shelf(self, obj):
+        return obj.container.shelf
+
+    view_container_shelf.short_description = _("Shelf")
 
     # https://stackoverflow.com/questions/4043843/
     def has_delete_permission(self, request, obj=None):
@@ -55,10 +77,10 @@ class BinAdmin(admin.ModelAdmin):
 
 @admin.register(Container)
 class ContainerAdmin(admin.ModelAdmin):
-    list_display = ('id', 'shelf', 'num')
-    readonly_fields = ('shelf', 'num')
+    list_display = ('id', 'num', 'shelf')
+    readonly_fields = ('num', 'shelf')
 
-    fields = ('shelf', 'num')
+    fields = ('num', 'shel')
 
     # https://stackoverflow.com/questions/4043843/
     def has_delete_permission(self, request, obj=None):
@@ -74,7 +96,7 @@ class BinderAdmin(admin.ModelAdmin):
         return obj.customer.code
 
     get_customer_code.short_description = _('Customer code')
-    list_display = ('customer', 'get_customer_code', 'bin')
+    list_display = ('customer', 'get_customer_code', 'container')
 
 
 @admin.register(Upload)
@@ -97,9 +119,9 @@ class ShelfWagtailAdmin(ModelAdmin):
     menu_icon = 'table'
 
 
-class BinWagtailAdmin(ModelAdmin):
-    model = Bin
-    # menu_label = _('Bin')
+class BoardWagtailAdmin(ModelAdmin):
+    model = Board
+    # menu_label = _('Board')
     list_filter = ('shelf', )
     list_display = ('id', 'shelf', 'row', 'col')
     menu_icon = 'placeholder'
@@ -108,7 +130,7 @@ class BinWagtailAdmin(ModelAdmin):
 class BinderWagtailAdmin(ModelAdmin):
     model = Binder
     # menu_label = _('Binder')
-    list_display = ('customer', 'bin')
+    list_display = ('customer', 'container')
     list_filter = ('customer',)
     search_fields = ('customer', )
     menu_icon = 'folder-open-1'
@@ -123,7 +145,7 @@ class ShelvesWagtailAdminGroup(ModelAdminGroup):
     items = (
         CustomerWagtailAdmin,
         ShelfWagtailAdmin,
-        BinWagtailAdmin,
+        BoardWagtailAdmin,
         BinderWagtailAdmin,
         UploadWagtailAdmin)
     menu_icon = 'table'

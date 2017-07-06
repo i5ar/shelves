@@ -8,8 +8,10 @@ from rest_framework.reverse import reverse
 
 from .serializers import (
     CustomerSerializer,
-    ShelfSerializer,
-    BinSerializer,
+    ShelfListSerializer,
+    ShelfDetailSerializer,
+    BoardSerializer,
+    ContainerSerializer,
     BinderSerializer,
     UserSerializer,
 )
@@ -17,7 +19,8 @@ from .serializers import (
 from ..models import (
     Customer,
     Shelf,
-    Bin,
+    Board,
+    Container,
     Binder,
 )
 
@@ -31,8 +34,10 @@ def shelves_root(request, format=None):
             'shelves-api:customer-list', request=request, format=format),
         'binders': reverse(
             'shelves-api:binder-list', request=request, format=format),
-        'bins': reverse(
-            'shelves-api:bin-list', request=request, format=format),
+        'containers': reverse(
+            'shelves-api:container-list', request=request, format=format),
+        'boards': reverse(
+            'shelves-api:board-list', request=request, format=format),
         'shelves': reverse(
             'shelves-api:shelf-list', request=request, format=format),
     })
@@ -50,7 +55,7 @@ class CustomerDetail(generics.RetrieveUpdateDestroyAPIView):
 
 class ShelfList(generics.ListCreateAPIView):
     queryset = Shelf.objects.all()
-    serializer_class = ShelfSerializer
+    serializer_class = ShelfListSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     # def perform_create(self, serializer):
@@ -59,19 +64,31 @@ class ShelfList(generics.ListCreateAPIView):
 
 class ShelfDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Shelf.objects.all()
-    serializer_class = ShelfSerializer
+    serializer_class = ShelfDetailSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
-class BinList(generics.ListCreateAPIView):
-    queryset = Bin.objects.all()
-    serializer_class = BinSerializer
+class BoardList(generics.ListCreateAPIView):
+    queryset = Board.objects.all()
+    serializer_class = BoardSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
-class BinDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Bin.objects.all()
-    serializer_class = BinSerializer
+class ContainerList(generics.ListCreateAPIView):
+    queryset = Container.objects.all()
+    serializer_class = ContainerSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+
+class ContainerDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Container.objects.all()
+    serializer_class = ContainerSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+
+class BoardDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Board.objects.all()
+    serializer_class = BoardSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 

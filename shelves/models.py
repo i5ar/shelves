@@ -60,7 +60,13 @@ class BinAmbiguous(models.Model):
         return '{}'.format(self.coordinate)
 
 
+class ShelfManager(models.Manager):
+    def get_tasks_by_user(self, id):
+        return super(ShelfManager, self).get_query_set().filter(id=id)
+
+
 class Shelf(models.Model):
+    """Regular or irregular forniture."""
     name = models.CharField(
         _('Name'), max_length=64,
         help_text=_('A name for the shelf.'), unique=True)
@@ -73,70 +79,85 @@ class Shelf(models.Model):
         _('Containers'), help_text=_('The number of containers'),
         blank=True, null=True)
 
-    def save(self, *args, **kwargs):
-        """Make sure appropriate fields are set."""
-        super(Shelf, self).save(*args, **kwargs)
-        if self.cols and self.rows and not self.nums:
-            self.nums = self.cols*self.rows
-            for num in range(self.nums):
-                container = Container(num=num+1, shelf=self)
-                container.validate_unique()
-                container.save()
-            for col in range(self.cols):
-                for row in range(self.rows):
-                    bin = Bin(col=col+1, row=row+1, shelf=self)
-                    bin.validate_unique()
-                    bin.save()
-        elif not self.cols and not self.rows and self.nums:
-            for num in range(self.nums):
-                container = Container(num=num+1, shelf=self)
-                container.validate_unique()
-                container.save()
-        elif not self.cols and self.rows:
-            raise ValueError(
-                "The columns field is required within the rows field.")
-        elif self.cols and not self.rows:
-            raise ValueError(
-                "The rows field is required within the columns field.")
-        else:
-            raise ValueError()
+    # objects = ShelfManager()
 
-        super(Shelf, self).save(*args, **kwargs)
+    # @classmethod
+    # def get_tasks_by_user(cls, mid):
+    #     return cls.objects.filters(id=mid)
+
+    def clean(self):
+        """Validate columns and rows fields.
+
+        Make sure both fields are inserted.
+        """
+        if not self.cols and self.rows:
+            raise ValidationError(
+                _("The columns field is required within the rows field."))
+        elif self.cols and not self.rows:
+            raise ValidationError(
+                _("The rows field is required within the columns field."))
+        elif not self.cols and not self.rows and not self.nums:
+            raise ValidationError(
+                _("At least one dimensional value is required."))
+
+    def save(self, *args, **kwargs):
+        """Create container and boards.
+
+        Create both containers and boards when the shelf columns and rows are
+        provided. When the shelf is irregular no board will be created.
+        """
+        if self.id:  # Update
+            if self.cols and self.rows:
+                self.name = self.name
+                self.desc = self.desc
+                self.nums = self.cols*self.rows
+                super(Shelf, self).save(*args, **kwargs)
+            elif self.nums:
+                self.name = self.name
+                self.desc = self.desc
+                super(Shelf, self).save(*args, **kwargs)
+        else:  # Create
+            if self.cols and self.rows:
+                # Create containers and store them in a list for later and save
+                self.name = self.name
+                self.desc = self.desc
+                self.nums = self.cols*self.rows
+                super(Shelf, self).save(*args, **kwargs)
+                cons = []
+                for num in range(self.nums):
+                    container = Container(num=num+1, shelf=self)
+                    container.validate_unique()
+                    container.save()
+                    cons.append(container)
+                # Create boards through bidimensional loops of columns and rows
+                for col in range(self.cols):
+                    for row in range(self.rows):
+                        board = Board(
+                            col=col+1, row=row+1, container=cons[col+row])
+                        board.save()
+            elif self.nums:
+                self.name = self.name
+                self.desc = self.desc
+                super(Shelf, self).save(*args, **kwargs)
+                for num in range(self.nums):
+                    container = Container(num=num+1, shelf=self)
+                    container.validate_unique()
+                    container.save()
 
     def __str__(self):
-        return str(self.name)
+        return '{}'.format(self.name)
 
     class Meta:
         verbose_name = _('Shelf')
         verbose_name_plural = _('Shelves')
 
 
-class Bin(models.Model):
-    col = models.IntegerField(_('Column'))
-    row = models.IntegerField(_('Row'))
-    # coordinate = models.CharField(_('Coordinate'), max_length=64, blank=True)
-    shelf = models.ForeignKey(Shelf, on_delete=models.CASCADE)
-
-    def validate_unique(self, exclude=None):
-        if Bin.objects.filter(
-                col=self.col, row=self.row, shelf=self.shelf).exists():
-            raise ValidationError(_('Coordinate must be unique'))
-
-    # def save(self, *args, **kwargs):
-    #     """Add a coordinate field based on the row and the column."""
-    #     list_int = [self.col, self.row]
-    #     self.coordinate = json.dumps(list_int)
-    #     super(Bin, self).save(*args, **kwargs)
-
-    def __str__(self):
-        return '{} bin'.format(self.shelf)
-
-    class Meta:
-        verbose_name = _('Bin')
-        verbose_name_plural = _('Bins')
-
-
 class Container(models.Model):
+    """Shelf units.
+
+    Containers can be used with irregular shelves as well.
+    """
+
     num = models.IntegerField(_('Number'))
     shelf = models.ForeignKey(Shelf, on_delete=models.CASCADE)
 
@@ -146,18 +167,48 @@ class Container(models.Model):
             raise ValidationError(_('Number must be unique'))
 
     def __str__(self):
-        return '{} container'.format(self.shelf)
+        return '{}'.format(self.num)
 
     class Meta:
         verbose_name = _('Container')
         verbose_name_plural = _('Containers')
 
 
+class Board(models.Model):
+    """Regular shelf boards."""
+
+    col = models.IntegerField(_('Column'))
+    row = models.IntegerField(_('Row'))
+    # coordinate = models.CharField(_('Coordinate'), max_length=64, blank=True)
+    # shelf = models.ForeignKey(Shelf, on_delete=models.CASCADE)
+    container = models.ForeignKey(Container, on_delete=models.CASCADE)  # test
+
+    # TODO: replace shelf with container
+    # def validate_unique(self, exclude=None):
+    #     if Board.objects.filter(
+    #             col=self.col, row=self.row, shelf=self.shelf).exists():
+    #         raise ValidationError(_('Coordinate must be unique'))
+
+    # def save(self, *args, **kwargs):
+    #     """Add a coordinate field based on the row and the column."""
+    #     list_int = [self.col, self.row]
+    #     self.coordinate = json.dumps(list_int)
+    #     super(Board, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return '{}'.format(self.container)
+
+    class Meta:
+        verbose_name = _('Board')
+        verbose_name_plural = _('Boards')
+
+
 class Binder(models.Model):
     customer = models.OneToOneField(
         'Customer', on_delete=models.CASCADE, related_name='customer',
         blank=True, null=True)
-    bin = models.ForeignKey(Bin, on_delete=models.CASCADE, null=True)
+    container = models.ForeignKey(
+        Container, on_delete=models.CASCADE, null=True)
     name = models.CharField(_('Binder name'), max_length=128, blank=True)
     content = models.TextField(_('Binder content'), blank=True)
     color = models.CharField(
