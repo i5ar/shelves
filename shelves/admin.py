@@ -41,7 +41,7 @@ class ShelfAdmin(admin.ModelAdmin):
             return "{}x{}".format(obj.cols, obj.rows)
 
     view_size.short_description = _("Size (colsxrows)")
-    view_size.empty_value_display = '???'
+    view_size.empty_value_display = '-'
 
     list_display = ('name', 'desc', 'view_size', 'nums', 'id')
 
@@ -58,11 +58,16 @@ class ShelfAdmin(admin.ModelAdmin):
 
 @admin.register(Board)
 class BoardAdmin(admin.ModelAdmin):
-    list_display = ('id', 'row', 'col', 'view_container_shelf')
+    list_display = ('id', 'row', 'col', 'view_container_shelf', 'view_container_id')
     readonly_fields = ('row', 'col')
-    # prepopulated_fields = {'coordinate': ('row', 'col',)}
+    # prepopulated_fields = {'jsoncoord': ('row', 'col',)}
 
     fields = ('row', 'col')
+
+    def view_container_id(self, obj):
+        return "{}".format(obj.container.id, )
+
+    view_container_id.short_description = _("Container id")
 
     def view_container_shelf(self, obj):
         return obj.container.shelf
@@ -77,10 +82,15 @@ class BoardAdmin(admin.ModelAdmin):
 
 @admin.register(Container)
 class ContainerAdmin(admin.ModelAdmin):
-    list_display = ('id', 'num', 'shelf')
-    readonly_fields = ('num', 'shelf')
+    list_display = ('id', 'shelf', 'view_board_id')
+    readonly_fields = ('shelf', )
 
-    fields = ('num', 'shel')
+    fields = ('shel', )
+
+    def view_board_id(self, obj):
+        return "{}".format(obj.board.id, )
+
+    view_board_id.short_description = _("Board id")
 
     # https://stackoverflow.com/questions/4043843/
     def has_delete_permission(self, request, obj=None):

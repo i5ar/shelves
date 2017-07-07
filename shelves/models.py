@@ -60,11 +60,6 @@ class BinAmbiguous(models.Model):
         return '{}'.format(self.coordinate)
 
 
-class ShelfManager(models.Manager):
-    def get_tasks_by_user(self, id):
-        return super(ShelfManager, self).get_query_set().filter(id=id)
-
-
 class Shelf(models.Model):
     """Regular or irregular forniture."""
     name = models.CharField(
@@ -78,12 +73,6 @@ class Shelf(models.Model):
     nums = models.PositiveIntegerField(
         _('Containers'), help_text=_('The number of containers'),
         blank=True, null=True)
-
-    # objects = ShelfManager()
-
-    # @classmethod
-    # def get_tasks_by_user(cls, mid):
-    #     return cls.objects.filters(id=mid)
 
     def clean(self):
         """Validate columns and rows fields.
@@ -123,24 +112,19 @@ class Shelf(models.Model):
                 self.desc = self.desc
                 self.nums = self.cols*self.rows
                 super(Shelf, self).save(*args, **kwargs)
-                cons = []
-                for num in range(self.nums):
-                    container = Container(num=num+1, shelf=self)
-                    container.validate_unique()
-                    container.save()
-                    cons.append(container)
-                # Create boards through bidimensional loops of columns and rows
                 for col in range(self.cols):
                     for row in range(self.rows):
+                        container = Container(shelf=self)
+                        container.save()
                         board = Board(
-                            col=col+1, row=row+1, container=cons[col+row])
+                            col=col+1, row=row+1, container=container)
                         board.save()
             elif self.nums:
                 self.name = self.name
                 self.desc = self.desc
                 super(Shelf, self).save(*args, **kwargs)
                 for num in range(self.nums):
-                    container = Container(num=num+1, shelf=self)
+                    container = Container(shelf=self)
                     container.validate_unique()
                     container.save()
 
@@ -153,21 +137,12 @@ class Shelf(models.Model):
 
 
 class Container(models.Model):
-    """Shelf units.
+    """Shelf units."""
 
-    Containers can be used with irregular shelves as well.
-    """
-
-    num = models.IntegerField(_('Number'))
     shelf = models.ForeignKey(Shelf, on_delete=models.CASCADE)
 
-    def validate_unique(self, exclude=None):
-        if Container.objects.filter(
-                num=self.num, shelf=self.shelf).exists():
-            raise ValidationError(_('Number must be unique'))
-
     def __str__(self):
-        return '{}'.format(self.num)
+        return '{}'.format(self.id)
 
     class Meta:
         verbose_name = _('Container')
@@ -179,20 +154,13 @@ class Board(models.Model):
 
     col = models.IntegerField(_('Column'))
     row = models.IntegerField(_('Row'))
-    # coordinate = models.CharField(_('Coordinate'), max_length=64, blank=True)
-    # shelf = models.ForeignKey(Shelf, on_delete=models.CASCADE)
-    container = models.ForeignKey(Container, on_delete=models.CASCADE)  # test
-
-    # TODO: replace shelf with container
-    # def validate_unique(self, exclude=None):
-    #     if Board.objects.filter(
-    #             col=self.col, row=self.row, shelf=self.shelf).exists():
-    #         raise ValidationError(_('Coordinate must be unique'))
+    # jsoncoord = models.CharField(_('Coordinate'), max_length=64, blank=True)
+    container = models.OneToOneField(Container, on_delete=models.CASCADE)
 
     # def save(self, *args, **kwargs):
-    #     """Add a coordinate field based on the row and the column."""
+    #     """Add a jsoncoord field based on the row and the column."""
     #     list_int = [self.col, self.row]
-    #     self.coordinate = json.dumps(list_int)
+    #     self.jsoncoord = json.dumps(list_int)
     #     super(Board, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -204,19 +172,19 @@ class Board(models.Model):
 
 
 class Binder(models.Model):
+    """The binder is unique for each customer"""
     customer = models.OneToOneField(
-        'Customer', on_delete=models.CASCADE, related_name='customer',
+        'Customer', on_delete=models.CASCADE,  # related_name='customer'
         blank=True, null=True)
     container = models.ForeignKey(
         Container, on_delete=models.CASCADE, null=True)
-    name = models.CharField(_('Binder name'), max_length=128, blank=True)
     content = models.TextField(_('Binder content'), blank=True)
     color = models.CharField(
         _('Color'), blank=True, max_length=6, help_text=_('Hex value.'))
     updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return '{}'.format(self.color)
+        return '{}'.format(self.customer)
 
     class Meta:
         verbose_name = _('Binder')

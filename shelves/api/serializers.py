@@ -70,28 +70,38 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
 
 class BinderSerializer(serializers.HyperlinkedModelSerializer):
 
-    '''
+    # NOTE: Make readonly fields
+    # customer = serializers.StringRelatedField()
+    # container = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    # NOTE: Make customer and container writable fields
     customer = serializers.CharField()
+    container_id = serializers.PrimaryKeyRelatedField(
+        queryset=Container.objects.all(), source='container')
 
     def create(self, validated_data):
-        """Create a new customer.
-
-        The `user` field as defined above is a username, so it must be
-        converted in a User object
-        """
-        username = validated_data.get('customer')
-        user = User.objects.get(username=username)
+        """Create a new binder."""
+        # NOTE: Get the user object from the user username
+        user_username = validated_data.get('customer')
+        user = User.objects.get(username=user_username)
         customer = Customer.objects.get(user=user)
         validated_data['customer'] = customer
+
+        # NOTE: Get the container object from the container id
+        # https://groups.google.com/forum/#!topic/django-rest-framework/5twgbh427uQ
+        instance = validated_data.get('container')
+        container = Container.objects.get(id=instance.id)
+        validated_data['container_id'] = container.id
+
         return Binder.objects.create(**validated_data)
-    '''
 
     class Meta:
         model = Binder
-        fields = ('url', 'customer', 'color', 'name', 'content')
+        fields = ('url', 'customer', 'color', 'content', 'container_id')
         extra_kwargs = {
             'url': {'view_name': "shelves-api:binder-detail"},
-            'customer': {'view_name': "shelves-api:customer-detail"},
+            # 'customer': {'view_name': "shelves-api:customer-detail"},
+            # 'container': {'view_name': "shelves-api:container-detail"},
         }
 
 
@@ -114,11 +124,11 @@ class BoardSerializer(serializers.HyperlinkedModelSerializer):
 class ContainerSerializer(serializers.HyperlinkedModelSerializer):
 
     binder_set = BinderSerializer(many=True, read_only=True)
-    board_set = BoardSerializer(many=True, read_only=True)
+    board = BoardSerializer(read_only=True)
 
     class Meta:
         model = Container
-        fields = ('url', 'num', 'binder_set', 'board_set')
+        fields = ('url', 'binder_set', 'board')
         extra_kwargs = {
             'url': {'view_name': "shelves-api:container-detail"},
         }
@@ -152,4 +162,4 @@ class ShelfDetailSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Shelf
-        fields = ('name', 'cols', 'rows', 'nums', 'container_set')
+        fields = ('name', 'desc', 'cols', 'rows', 'nums', 'container_set')
