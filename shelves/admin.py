@@ -7,7 +7,12 @@ from wagtail.contrib.modeladmin.options import (
     ModelAdminGroup,
     modeladmin_register)
 
-from .models import Customer, Shelf, Board, Container, Binder, Upload
+from .models import (
+    Customer,
+    Shelf,
+    Container,
+    Binder,
+    Upload)
 
 
 @admin.register(Customer)
@@ -56,41 +61,12 @@ class ShelfAdmin(admin.ModelAdmin):
         return ['cols', 'rows', 'nums']
 
 
-@admin.register(Board)
-class BoardAdmin(admin.ModelAdmin):
-    list_display = ('id', 'row', 'col', 'view_container_shelf', 'view_container_id')
-    readonly_fields = ('row', 'col')
-    # prepopulated_fields = {'jsoncoord': ('row', 'col',)}
-
-    fields = ('row', 'col')
-
-    def view_container_id(self, obj):
-        return "{}".format(obj.container.id, )
-
-    view_container_id.short_description = _("Container id")
-
-    def view_container_shelf(self, obj):
-        return obj.container.shelf
-
-    view_container_shelf.short_description = _("Shelf")
-
-    # https://stackoverflow.com/questions/4043843/
-    def has_delete_permission(self, request, obj=None):
-        """Disable the delete link."""
-        return False
-
-
 @admin.register(Container)
 class ContainerAdmin(admin.ModelAdmin):
-    list_display = ('id', 'shelf', 'view_board_id')
-    readonly_fields = ('shelf', )
-
-    fields = ('shel', )
-
-    def view_board_id(self, obj):
-        return "{}".format(obj.board.id, )
-
-    view_board_id.short_description = _("Board id")
+    list_display = ('id', 'shelf', 'col', 'row')
+    readonly_fields = ('shelf', 'col', 'row')
+    fields = ('shelf', ('col', 'row'))
+    # prepopulated_fields = {'jsoncoord': ('col', 'row',)}
 
     # https://stackoverflow.com/questions/4043843/
     def has_delete_permission(self, request, obj=None):
@@ -129,14 +105,6 @@ class ShelfWagtailAdmin(ModelAdmin):
     menu_icon = 'table'
 
 
-class BoardWagtailAdmin(ModelAdmin):
-    model = Board
-    # menu_label = _('Board')
-    list_filter = ('shelf', )
-    list_display = ('id', 'shelf', 'row', 'col')
-    menu_icon = 'placeholder'
-
-
 class BinderWagtailAdmin(ModelAdmin):
     model = Binder
     # menu_label = _('Binder')
@@ -155,7 +123,6 @@ class ShelvesWagtailAdminGroup(ModelAdminGroup):
     items = (
         CustomerWagtailAdmin,
         ShelfWagtailAdmin,
-        BoardWagtailAdmin,
         BinderWagtailAdmin,
         UploadWagtailAdmin)
     menu_icon = 'table'

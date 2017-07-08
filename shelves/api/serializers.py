@@ -4,7 +4,6 @@ from rest_framework import serializers
 
 from ..models import (
     Customer,
-    Board,
     Container,
     Shelf,
     Binder,
@@ -105,30 +104,18 @@ class BinderSerializer(serializers.HyperlinkedModelSerializer):
         }
 
 
-class BoardSerializer(serializers.HyperlinkedModelSerializer):
-
-    col_row = serializers.SerializerMethodField('set_col_row')
-
-    def set_col_row(self, obj):
-        """Define a custom field instead of coordinate field."""
-        return [obj.col, obj.row]
-
-    class Meta:
-        model = Board
-        fields = ('url', 'col_row')
-        extra_kwargs = {
-            'url': {'view_name': "shelves-api:board-detail"},
-        }
-
-
 class ContainerSerializer(serializers.HyperlinkedModelSerializer):
 
     binder_set = BinderSerializer(many=True, read_only=True)
-    board = BoardSerializer(read_only=True)
+    coords = serializers.SerializerMethodField()
+
+    def get_coords(self, obj):
+        """Set coordinates array instead of separate col and row fields."""
+        return [obj.col, obj.row]
 
     class Meta:
         model = Container
-        fields = ('url', 'binder_set', 'board')
+        fields = ('url', 'binder_set', 'coords')
         extra_kwargs = {
             'url': {'view_name': "shelves-api:container-detail"},
         }

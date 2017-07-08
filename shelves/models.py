@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.core.files.storage import default_storage
 from django.utils.translation import ugettext_lazy as _
 from django.db import IntegrityError
@@ -66,18 +67,21 @@ class Shelf(models.Model):
         _('Name'), max_length=64,
         help_text=_('A name for the shelf.'), unique=True)
     desc = models.TextField(_('Description'),  blank=True)
-    cols = models.IntegerField(
-        _('Columns'), help_text=_('The number of cols'), blank=True, null=True)
-    rows = models.IntegerField(
-        _('Rows'), help_text=_('The number of rows'), blank=True, null=True)
+    cols = models.PositiveIntegerField(
+        _('Columns'), validators=[MinValueValidator(1)],
+        help_text=_('The number of cols'), blank=True, null=True)
+    rows = models.PositiveIntegerField(
+        _('Rows'), validators=[MinValueValidator(1)],
+        help_text=_('The number of rows'), blank=True, null=True)
     nums = models.PositiveIntegerField(
-        _('Containers'), help_text=_('The number of containers'),
-        blank=True, null=True)
+        _('Containers'), validators=[MinValueValidator(1)],
+        help_text=_('The number of containers'), blank=True, null=True)
 
     def clean(self):
         """Validate columns and rows fields.
 
-        Make sure both fields are inserted.
+        The cleaning method doesn't run when the fields are passed through the
+        REST API.
         """
         if not self.cols and self.rows:
             raise ValidationError(
@@ -89,12 +93,13 @@ class Shelf(models.Model):
             raise ValidationError(
                 _("At least one dimensional value is required."))
 
-    def save(self, *args, **kwargs):
-        """Create container and boards.
+        if self.cols and self.rows and self.cols*self.rows > 2**6:
+            raise ValidationError(_("Too much containers for one shelf."))
+        elif self.nums and self.nums > 2**6:
+            raise ValidationError(_("Too much containers."))
 
-        Create both containers and boards when the shelf columns and rows are
-        provided. When the shelf is irregular no board will be created.
-        """
+    def save(self, *args, **kwargs):
+        """Create and update containers."""
         if self.id:  # Update
             if self.cols and self.rows:
                 self.name = self.name
@@ -114,18 +119,15 @@ class Shelf(models.Model):
                 super(Shelf, self).save(*args, **kwargs)
                 for col in range(self.cols):
                     for row in range(self.rows):
-                        container = Container(shelf=self)
+                        container = Container(
+                            shelf=self, col=col+1, row=row+1)
                         container.save()
-                        board = Board(
-                            col=col+1, row=row+1, container=container)
-                        board.save()
             elif self.nums:
                 self.name = self.name
                 self.desc = self.desc
                 super(Shelf, self).save(*args, **kwargs)
                 for num in range(self.nums):
                     container = Container(shelf=self)
-                    container.validate_unique()
                     container.save()
 
     def __str__(self):
@@ -140,35 +142,22 @@ class Container(models.Model):
     """Shelf units."""
 
     shelf = models.ForeignKey(Shelf, on_delete=models.CASCADE)
+    col = models.IntegerField(_('Column'), blank=True, null=True)
+    row = models.IntegerField(_('Row'), blank=True, null=True)
+    # jsoncoord = models.CharField(_('Coordinate'), max_length=64, blank=True)
 
     def __str__(self):
         return '{}'.format(self.id)
-
-    class Meta:
-        verbose_name = _('Container')
-        verbose_name_plural = _('Containers')
-
-
-class Board(models.Model):
-    """Regular shelf boards."""
-
-    col = models.IntegerField(_('Column'))
-    row = models.IntegerField(_('Row'))
-    # jsoncoord = models.CharField(_('Coordinate'), max_length=64, blank=True)
-    container = models.OneToOneField(Container, on_delete=models.CASCADE)
 
     # def save(self, *args, **kwargs):
     #     """Add a jsoncoord field based on the row and the column."""
     #     list_int = [self.col, self.row]
     #     self.jsoncoord = json.dumps(list_int)
-    #     super(Board, self).save(*args, **kwargs)
-
-    def __str__(self):
-        return '{}'.format(self.container)
+    #     super(Container, self).save(*args, **kwargs)
 
     class Meta:
-        verbose_name = _('Board')
-        verbose_name_plural = _('Boards')
+        verbose_name = _('Container')
+        verbose_name_plural = _('Containers')
 
 
 class Binder(models.Model):

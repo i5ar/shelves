@@ -23,11 +23,6 @@ urlpatterns = [
     url(r'^containers/(?P<pk>[0-9]+)/$', views.ContainerDetail.as_view(),
         name="container-detail"),
 
-    url(r'^boards/$', views.BoardList.as_view(),
-        name="board-list"),
-    url(r'^boards/(?P<pk>[0-9]+)/$', views.BoardDetail.as_view(),
-        name="board-detail"),
-
     url(r'^shelves/$', views.ShelfList.as_view(),
         name="shelf-list"),
     url(r'^shelves/(?P<pk>[0-9]+)/$', views.ShelfDetail.as_view(),
