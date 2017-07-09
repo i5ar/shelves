@@ -1,5 +1,5 @@
 branch-defaults:
-  master:
+  devel:
     environment: django-env
     group_suffix: null
 global:
