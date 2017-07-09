@@ -18,7 +18,12 @@ if 'RDS_DB_NAME' in os.environ:
     }
 
 
-ALLOWED_HOSTS = ['.mvsm3depy3.eu-central-1.elasticbeanstalk.com']
+ALLOWED_HOSTS = [
+    '.mvsm3depy3.eu-central-1.elasticbeanstalk.com',
+    'localhost',
+    '127.0.0.1',
+    '[::1]'
+]
 
 SECRET_KEY = os.environ['SECRET_KEY']
 
@@ -43,7 +48,7 @@ AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
 # refers directly to STATIC_URL.
 # STATIC_URL = "https://%s/" % AWS_S3_CUSTOM_DOMAIN
 
-# Tell the staticfiles app to use S3 Boto 3 Storage when running 'collectstatic'
+# Tell the staticfiles app to use S3 Boto 3 Storage when 'collectstatic' run.
 # STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # Override S3Boto3Storage in order to accomodate 'media' and 'static'

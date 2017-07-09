@@ -1,7 +1,6 @@
 branch-defaults:
   master:
     environment: django-env
-    group_suffix: null
 global:
   application_name: django-gerp
   branch: null
