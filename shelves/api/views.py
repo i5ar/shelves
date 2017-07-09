@@ -50,6 +50,13 @@ class CustomerDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ShelfList(generics.ListCreateAPIView):
+    """List and create shelves.
+
+    Front methods:
+    - ``getShelves()``
+    - ``postShelf()``
+    """
+
     queryset = Shelf.objects.all()
     serializer_class = ShelfListSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
@@ -59,6 +66,13 @@ class ShelfList(generics.ListCreateAPIView):
 
 
 class ShelfDetail(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve update and destroy shelf.
+
+    Front methods:
+    - ``getShelf()``
+    - ``deleteShelf()``
+    """
+
     queryset = Shelf.objects.all()
     serializer_class = ShelfDetailSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
@@ -77,6 +91,13 @@ class ContainerDetail(generics.RetrieveAPIView):
 
 
 class BinderList(generics.ListCreateAPIView):
+    """List and create binders.
+
+    Front methods:
+    - ``postBinder()``
+    - ``getBinders()``
+    """
+
     queryset = Binder.objects.all()
     serializer_class = BinderSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)

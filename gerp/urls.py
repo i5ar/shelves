@@ -3,13 +3,15 @@ from __future__ import absolute_import, unicode_literals
 from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
+from django.conf.urls.i18n import i18n_patterns
 
 from search import views as search_views
+
 from wagtail.wagtailadmin import urls as wagtailadmin_urls
 from wagtail.wagtailcore import urls as wagtail_urls
 from wagtail.wagtaildocs import urls as wagtaildocs_urls
 
-from django.conf.urls.i18n import i18n_patterns
+from rest_framework_jwt.views import obtain_jwt_token
 
 from shelves import urls as shelves_urls
 from portables import urls as portables_urls
@@ -33,6 +35,7 @@ urlpatterns = i18n_patterns(
         'accounts.api.urls', namespace='accounts-api')),
     url(r'^api-auth/', include(
         'rest_framework.urls', namespace='rest_framework')),
+    url(r'^api-token-auth/', obtain_jwt_token),
 
     # https://docs.djangoproject.com/en/1.9/topics/i18n/translation/#the-set-language-redirect-view
     url(r'^i18n/', include('django.conf.urls.i18n')),

@@ -133,7 +133,7 @@ class ShelfListSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Shelf
-        fields = ('url', 'name', 'cols', 'rows', 'nums', 'container_set')
+        fields = ('url', 'id', 'name', 'cols', 'rows', 'nums', 'container_set')
         extra_kwargs = {
             'url': {'view_name': "shelves-api:shelf-detail"},
         }

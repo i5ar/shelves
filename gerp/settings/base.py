@@ -70,7 +70,7 @@ INSTALLED_APPS = [
 
     # Token Authentication
     # http://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication
-    'rest_framework.authtoken',
+    # 'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -184,7 +184,14 @@ REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny'
+        # 'rest_framework.permissions.AllowAny'
+        'rest_framework.permissions.IsAuthenticated'
+    ],
+    # http://getblimp.github.io/django-rest-framework-jwt/
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
     ],
     'PAGE_SIZE': 8
 }
