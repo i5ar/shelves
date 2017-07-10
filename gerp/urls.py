@@ -11,7 +11,7 @@ from wagtail.wagtailadmin import urls as wagtailadmin_urls
 from wagtail.wagtailcore import urls as wagtail_urls
 from wagtail.wagtaildocs import urls as wagtaildocs_urls
 
-from rest_framework_jwt.views import obtain_jwt_token
+from rest_framework_jwt.views import obtain_jwt_token, verify_jwt_token
 
 from shelves import urls as shelves_urls
 from portables import urls as portables_urls
@@ -36,6 +36,7 @@ urlpatterns = i18n_patterns(
     url(r'^api-auth/', include(
         'rest_framework.urls', namespace='rest_framework')),
     url(r'^api-token-auth/', obtain_jwt_token),
+    url(r'^api-token-verify/', verify_jwt_token),
 
     # https://docs.djangoproject.com/en/1.9/topics/i18n/translation/#the-set-language-redirect-view
     url(r'^i18n/', include('django.conf.urls.i18n')),
