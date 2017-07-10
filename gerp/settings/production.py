@@ -62,6 +62,9 @@ DEFAULT_FILE_STORAGE = 'custom_storages.MediaS3Boto3Storage'
 MEDIA_URL = "https://%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, MEDIAFILES_LOCATION)
 
 
+# Honor the 'X-Forwarded-Proto' header for request.is_secure()
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 try:
     from .local import *
 except ImportError:
