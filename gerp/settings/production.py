@@ -20,7 +20,9 @@ if 'RDS_DB_NAME' in os.environ:
 
 ALLOWED_HOSTS = [
     '.mvsm3depy3.eu-central-1.elasticbeanstalk.com',
+    '.django-env.eu-central-1.elasticbeanstalk.com',
     '.isar.services',
+    '.isar.online',
     'localhost',
     '127.0.0.1',
     '[::1]'
