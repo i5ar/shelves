@@ -161,7 +161,8 @@ class Container(models.Model):
 
 
 class Binder(models.Model):
-    """The binder is unique for each customer"""
+    """The binder is unique for each customer."""
+    title = models.CharField(max_length=64, blank=False)
     customer = models.OneToOneField(
         'Customer', on_delete=models.CASCADE,  # related_name='customer'
         blank=True, null=True)

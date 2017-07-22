@@ -76,13 +76,15 @@ class ContainerAdmin(admin.ModelAdmin):
 
 @admin.register(Binder)
 class BinderAdmin(admin.ModelAdmin):
-    search_fields = ('customer__name', 'customer__code')
+    search_fields = ('title', 'customer__code', 'customer__user__username')
 
     def get_customer_code(self, obj):
-        return obj.customer.code
+        if obj.customer:
+            return obj.customer.code
 
     get_customer_code.short_description = _('Customer code')
-    list_display = ('customer', 'get_customer_code', 'container')
+    list_display = ('title', 'customer', 'get_customer_code', 'container')
+    list_filter = ('customer', 'container__shelf__name')
 
 
 @admin.register(Upload)
