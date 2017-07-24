@@ -70,20 +70,23 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
 class BinderSerializer(serializers.HyperlinkedModelSerializer):
 
     # NOTE: Make readonly fields
-    # customer = serializers.StringRelatedField()
+    customer = serializers.StringRelatedField()
     # container = serializers.PrimaryKeyRelatedField(read_only=True)
 
     # NOTE: Make customer and container writable fields
-    customer = serializers.CharField()
+    customer = serializers.CharField(allow_null=True, allow_blank=True)
     container_id = serializers.PrimaryKeyRelatedField(
         queryset=Container.objects.all(), source='container')
 
     def create(self, validated_data):
         """Create a new binder."""
-        # NOTE: Get the user object from the user username
+        # NOTE: Get the user object from the user username if provided
         user_username = validated_data.get('customer')
-        user = User.objects.get(username=user_username)
-        customer = Customer.objects.get(user=user)
+        try:
+            user = User.objects.get(username=user_username)
+            customer = Customer.objects.get(user=user)
+        except:
+            customer = None
         validated_data['customer'] = customer
 
         # NOTE: Get the container object from the container id
@@ -96,7 +99,8 @@ class BinderSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Binder
-        fields = ('url', 'customer', 'color', 'content', 'container_id')
+        fields = (
+            'url', 'title', 'customer', 'color', 'content', 'container_id')
         extra_kwargs = {
             'url': {'view_name': "shelves-api:binder-detail"},
             # 'customer': {'view_name': "shelves-api:customer-detail"},
