@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
+from django.db import models
+from django.forms import Textarea
 
 from schedule.models.events import Event
 from schedule.models.calendars import Calendar
@@ -39,18 +41,31 @@ class RegistrationEventAdmin(admin.ModelAdmin):
         "end",
         "cost",
         "submitted")
+    list_editable = ('description', 'city', 'cost')
+    search_fields = ['city']
     inlines = [AttachedInline, ContactInline, ExamEventInline]
 
+    # NOTE: Override textarea size in the list views
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows': 1})},
+    }
+
     def view_website(self, instance):
+        """Truncate anchor."""
         return '<a href="{0}" target="_blank">{0:.32}...</a>'.format(
             instance.website)
     view_website.allow_tags = True
     view_website.short_description = _("Website")
 
     def view_attached_count(self, instance):
+        """Count attached files."""
         attached_count = Attached.objects.filter(registration=instance).count()
         return '{}'.format(attached_count)
     view_attached_count.short_description = _("Attachments")
+
+    def get_ordering(self, request):
+        """Order by end and submitted status."""
+        return ['end', 'submitted']
 
 
 class EventWagtailAdmin(ModelAdmin):
