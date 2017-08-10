@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
-from django.forms import Textarea
+from django.forms import Textarea, TextInput
 
 from schedule.models.events import Event
 from schedule.models.calendars import Calendar
@@ -34,20 +34,20 @@ class AttachedInline(admin.TabularInline):
 class RegistrationEventAdmin(admin.ModelAdmin):
     list_display = (
         "title",
-        "city",
+        "address",
         "description",
         "view_website",
         "view_attached_count",
         "end",
         "cost",
         "submitted")
-    list_editable = ('description', 'city', 'cost')
-    search_fields = ['city']
+    list_editable = ('cost', )
+    search_fields = ['address']
     inlines = [AttachedInline, ContactInline, ExamEventInline]
 
-    # NOTE: Override textarea size in the list views
+    # NOTE: Override text input size in the list views
     formfield_overrides = {
-        models.TextField: {'widget': Textarea(attrs={'rows': 1})},
+        models.FloatField: {'widget': TextInput(attrs={'size': 8})},
     }
 
     def view_website(self, instance):

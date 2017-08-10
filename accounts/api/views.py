@@ -14,7 +14,7 @@ from rest_framework.mixins import DestroyModelMixin, UpdateModelMixin
 from rest_framework.generics import (
     CreateAPIView,
     DestroyAPIView,
-    ListAPIView, 
+    ListAPIView,
     UpdateAPIView,
     RetrieveAPIView,
     RetrieveUpdateAPIView)
@@ -25,13 +25,13 @@ from rest_framework.permissions import (
     IsAdminUser,
     IsAuthenticatedOrReadOnly)
 
-
-User = get_user_model()
-
-
 from .serializers import (
     UserCreateSerializer,
-    UserLoginSerializer)
+    UserLoginSerializer
+)
+
+
+User = get_user_model()
 
 
 class UserCreateAPIView(CreateAPIView):
@@ -43,7 +43,7 @@ class UserCreateAPIView(CreateAPIView):
 class UserLoginAPIView(APIView):
     permission_classes = [AllowAny]
     serializer_class = UserLoginSerializer
-    
+
     def post(self, request, *args, **kwargs):
         data = request.data
         serializer = UserLoginSerializer(data=data)

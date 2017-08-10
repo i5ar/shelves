@@ -35,6 +35,7 @@ urlpatterns = i18n_patterns(
         'accounts.api.urls', namespace='accounts-api')),
     url(r'^api-auth/', include(
         'rest_framework.urls', namespace='rest_framework')),
+    # JWT
     url(r'^api-token-auth/', obtain_jwt_token),
     url(r'^api-token-verify/', verify_jwt_token),
 

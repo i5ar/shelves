@@ -43,10 +43,10 @@ class Contact(models.Model):
 
 
 class ExamEvent(models.Model):
-    title = models.CharField(_('Title'), max_length=255, blank=True)
+    title = models.CharField(_('Title'), max_length=255)
     start = models.DateTimeField(_('Start'), db_index=True)
-    description = models.TextField(
-        _('Description'), max_length=255, blank=True)
+    address = models.CharField(_('Address'), max_length=255, blank=True)
+    description = models.TextField(_('Description'), blank=True)
     registration = models.ForeignKey(
         'RegistrationEvent', on_delete=models.CASCADE)
 
@@ -79,8 +79,8 @@ class RegistrationEvent(models.Model):
     end = models.DateTimeField(
         _('Deadline'), db_index=True, blank=True, null=True)
     title = models.CharField(_('University'), max_length=255)
-    city = models.CharField(_('City'), max_length=255, blank=True)
-    description = models.TextField(_('Description'), null=True, blank=True)
+    address = models.CharField(_('Address'), max_length=255, blank=True)
+    description = models.TextField(_('Description'), blank=True)
     website = models.URLField(blank=True)
     submitted = models.BooleanField(_('Submitted'))
     cost = models.FloatField(_('Cost'), blank=True, null=True)
