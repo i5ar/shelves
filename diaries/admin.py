@@ -15,6 +15,18 @@ from wagtail.contrib.modeladmin.options import (
 from .models import ExamEvent, Contact, Attached, RegistrationEvent
 
 
+@admin.register(ExamEvent)
+class ExamEventAdmin(admin.ModelAdmin):
+    list_display = (
+        "title",
+        "registration",
+        "start")
+
+    def get_ordering(self, request):
+        """Order by start exam."""
+        return ['start']
+
+
 class ExamEventInline(admin.TabularInline):
     model = ExamEvent
     extra = 1
@@ -38,8 +50,8 @@ class RegistrationEventAdmin(admin.ModelAdmin):
         "description",
         "view_website",
         "view_attached_count",
-        "end",
         "cost",
+        "end",
         "submitted")
     list_editable = ('cost', )
     search_fields = ['address']
