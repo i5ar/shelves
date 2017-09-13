@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-07-16 00:32+0200\n"
+"POT-Creation-Date: 2017-09-13 10:16+0200\n"
 "PO-Revision-Date: 2017-06-10 00:57+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -29,7 +29,7 @@ msgstr ""
 msgid "Size (colsxrows)"
 msgstr "Dimensione (colonnexrighe)"
 
-#: .\shelves\admin.py:84
+#: .\shelves\admin.py:85
 msgid "Customer code"
 msgstr "Codice cliente"
 
@@ -135,39 +135,39 @@ msgstr "Riga"
 msgid "Container"
 msgstr ""
 
-#: .\shelves\models.py:170
+#: .\shelves\models.py:171
 #, fuzzy
 #| msgid "Binder"
 msgid "Binder content"
 msgstr "Faldone"
 
-#: .\shelves\models.py:172
+#: .\shelves\models.py:173
 msgid "Color"
 msgstr ""
 
-#: .\shelves\models.py:172
+#: .\shelves\models.py:173
 msgid "Hex value."
 msgstr ""
 
-#: .\shelves\models.py:179
+#: .\shelves\models.py:180
 msgid "Binder"
 msgstr "Faldone"
 
-#: .\shelves\models.py:180
+#: .\shelves\models.py:181
 msgid "Binders"
 msgstr "Faldoni"
 
-#: .\shelves\models.py:220
+#: .\shelves\models.py:221
 #, fuzzy
 #| msgid "name"
 msgid "username"
 msgstr "nome"
 
-#: .\shelves\models.py:220
+#: .\shelves\models.py:221
 msgid "code"
 msgstr "codice"
 
-#: .\shelves\models.py:229
+#: .\shelves\models.py:230
 msgid ""
 "The CSV file require a proper header in order to spot the corresponding "
 "model fields."

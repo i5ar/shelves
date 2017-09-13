@@ -47,8 +47,11 @@ class ExamEvent(models.Model):
     start = models.DateTimeField(_('Start'), db_index=True)
     address = models.CharField(_('Address'), max_length=255, blank=True)
     description = models.TextField(_('Description'), blank=True)
+    submitted = models.BooleanField(_('Submitted'))
     registration = models.ForeignKey(
-        'RegistrationEvent', on_delete=models.CASCADE)
+        'RegistrationEvent',
+        on_delete=models.CASCADE,
+        verbose_name=_('Registration'))
 
     class Meta:
         verbose_name = _('Exam')
@@ -78,7 +81,7 @@ class RegistrationEvent(models.Model):
         _('Start'), db_index=True, blank=True, null=True)
     end = models.DateTimeField(
         _('Deadline'), db_index=True, blank=True, null=True)
-    title = models.CharField(_('University'), max_length=255)
+    title = models.CharField(_('Firm'), max_length=255)
     address = models.CharField(_('Address'), max_length=255, blank=True)
     description = models.TextField(_('Description'), blank=True)
     website = models.URLField(blank=True)

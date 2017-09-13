@@ -20,7 +20,9 @@ class ExamEventAdmin(admin.ModelAdmin):
     list_display = (
         "title",
         "registration",
-        "start")
+        "address",
+        "start",
+        "submitted")
 
     def get_ordering(self, request):
         """Order by start exam."""
