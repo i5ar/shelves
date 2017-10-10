@@ -18,12 +18,14 @@ import json
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
 
-    customer = serializers.HyperlinkedRelatedField(
-        view_name='shelves-api:customer-detail', read_only=True)
+    # NOTE: Uncomment if User is also Customer
+    # customer = serializers.HyperlinkedRelatedField(
+    #     view_name='shelves-api:customer-detail', read_only=True)
 
     class Meta:
         model = User
-        fields = ('url', 'id', 'username', 'customer')
+        # NOTE: Add `customer` field if User is also Customer
+        fields = ('url', 'id', 'username')  # previusly `customer`
         extra_kwargs = {
             'url': {'view_name': "shelves-api:user-detail"},
         }
@@ -31,7 +33,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
 class CustomerSerializer(serializers.HyperlinkedModelSerializer):
 
-    '''
+    '''NOTE: Tricky for further development of APIs.
     user = serializers.CharField()
 
     def create(self, validated_data):
@@ -60,10 +62,10 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Customer
-        fields = ('url', 'user', 'code')
+        fields = ('url', 'name', 'code')  # `name` previusly `user`
         extra_kwargs = {
             'url': {'view_name': "shelves-api:customer-detail"},
-            'user': {'view_name': "shelves-api:user-detail"},
+            # 'user': {'view_name': "shelves-api:user-detail"},
         }
 
 
@@ -81,10 +83,11 @@ class BinderSerializer(serializers.HyperlinkedModelSerializer):
     def create(self, validated_data):
         """Create a new binder."""
         # NOTE: Get the user object from the user username if provided
-        user_username = validated_data.get('customer')
+        # user_username = validated_data.get('customer')
+        name = validated_data.get('customer')
         try:
-            user = User.objects.get(username=user_username)
-            customer = Customer.objects.get(user=user)
+            # user = User.objects.get(username=user_username)
+            customer = Customer.objects.get(name=name)  # previusly `user=user`
         except:
             customer = None
         validated_data['customer'] = customer

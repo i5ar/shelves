@@ -17,7 +17,17 @@ from .models import (
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ("code", "user")
+    list_display = ("code", "name", "author")  # `name` previusly `user`
+
+    fieldsets = [
+        (None, {'fields': [('code', 'name')]}),
+    ]
+
+    def save_model(self, request, obj, form, change):
+        """Save author as current user."""
+        if getattr(obj, 'author', None) is None:
+            obj.author = request.user
+        obj.save()
 
 
 @admin.register(Shelf)
@@ -40,6 +50,12 @@ class ShelfAdmin(admin.ModelAdmin):
             'fields': ('nums', ),
         }),
     )
+
+    def save_model(self, request, obj, form, change):
+        """Save author as current user."""
+        if getattr(obj, 'author', None) is None:
+            obj.author = request.user
+        obj.save()
 
     def view_size(self, obj):
         if obj.cols and obj.rows:
@@ -76,7 +92,8 @@ class ContainerAdmin(admin.ModelAdmin):
 
 @admin.register(Binder)
 class BinderAdmin(admin.ModelAdmin):
-    search_fields = ('title', 'customer__code', 'customer__user__username')
+    # search_fields = ('title', 'customer__code', 'customer__user__username')
+    search_fields = ('title', 'customer__code', 'customer__name')
 
     def get_customer_code(self, obj):
         if obj.customer:
@@ -95,9 +112,9 @@ class UploadAdmin(admin.ModelAdmin):
 class CustomerWagtailAdmin(ModelAdmin):
     model = Customer
     # menu_label = _('Customer')
-    list_display = ('user', 'code')
-    list_filter = ('user', 'code')
-    search_fields = ('user', 'code')
+    list_display = ('name', 'code')  # `name` previusly `user`
+    list_filter = ('name', 'code')  # `name` previusly `user`
+    search_fields = ('name', 'code')  # `name` previusly `user`
     menu_icon = 'group'
 
 

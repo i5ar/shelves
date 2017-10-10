@@ -7,4 +7,3 @@ class UploadForm(forms.ModelForm):
     class Meta():
         model = Upload
         fields = ['csv_file']
-        

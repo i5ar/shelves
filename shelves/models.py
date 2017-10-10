@@ -1,9 +1,10 @@
 from django.db import models
+from django.db import IntegrityError
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.core.files.storage import default_storage
 from django.utils.translation import ugettext_lazy as _
-from django.db import IntegrityError
 from django.contrib.auth.models import User
 
 import json
@@ -11,22 +12,27 @@ import csv
 
 
 class Customer(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    # user = models.OneToOneField(User, on_delete=models.CASCADE)
+    name = models.CharField(_('Name'), max_length=64, blank=True)
+
+    # @property
+    # def name(self):
+    #     """Avoid breaking change.
+    #     If the previus model had a `name` field the property decorator will
+    #     prevent errors if a `customer.name` is used somewhere else.
+    #     """
+    #     return self.user.username
+
     code = models.IntegerField(
         _('Code'), null=True, unique=True,
-        help_text=_('Customer code must not be confused with user code!')
-    )
+        help_text=_('Customer code must not be confused with user code!'))
 
-    @property
-    def name(self):
-        """Avoid breaking change.
-        The previus model had a `name` field so the property decorator will
-        prevent errors if a `customer.name` is used somewhere else.
-        """
-        return self.user.username
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.user.username
+        # return self.user.username
+        return self.name
 
     class Meta:
         verbose_name = _('Customer')
@@ -76,6 +82,9 @@ class Shelf(models.Model):
     nums = models.PositiveIntegerField(
         _('Containers'), validators=[MinValueValidator(1)],
         help_text=_('The number of containers'), blank=True, null=True)
+
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     def clean(self):
         """Validate columns and rows fields.
@@ -181,7 +190,9 @@ class Binder(models.Model):
         verbose_name_plural = _('Binders')
 
 
+'''
 class Upload(models.Model):
+    """Upload Customers as Users"""
     csv_file = models.FileField('File CSV', upload_to='docs')
 
     def save(self, *args, **kwargs):
@@ -201,6 +212,56 @@ class Upload(models.Model):
                         cust, created_cust = Customer.objects.get_or_create(
                             user=user, code=row['code'])
                     except IntegrityError as e:
+                        """
+                        An integrity error may happen if two customers have the
+                        same code.
+                        """
+                        print('{0!r}'.format(e))
+                        raise ValidationError(e, code='integrity')
+                    except KeyError as e:
+                        """
+                        Key error may happen if CSV header is divergent
+                        from model fields
+                        """
+                        try:
+                            """
+                            Pretend internationalized field username match the
+                            CSV header
+                            """
+                            cust, created = Customer.objects.get_or_create(
+                                user=row[_('username')], code=row[_('code')])
+                        except:
+                            raise ValidationError(
+                                'Is the field {} present in the CSV file '
+                                'header?'.format(e),
+                                code='key')
+
+            else:
+                raise ValidationError(
+                    _('The CSV file require a proper header in order to spot '
+                        'the corresponding model fields.'),
+                    code='invalid')
+'''
+
+
+class Upload(models.Model):
+    """Upload Customers (no Users)"""
+    csv_file = models.FileField('File CSV', upload_to='docs')
+
+    def save(self, *args, **kwargs):
+        super(Upload, self).save(*args, **kwargs)
+
+        # http://stackoverflow.com/questions/2459979/how-to-import-csv-data-into-django-models
+        with open(default_storage.path(self.csv_file)) as f:
+            has_header = csv.Sniffer().has_header(f.read(1024))
+            f.seek(0)
+            if has_header:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    try:
+                        cust, created_cust = Customer.objects.get_or_create(
+                            name=row['name'], code=row['code'])
+                    except IntegrityError as e:
                         '''
                         An integrity error may happen if two customers have the
                         same code.
@@ -214,11 +275,11 @@ class Upload(models.Model):
                         '''
                         try:
                             '''
-                            Pretend internationalized field username match the
+                            Pretend internationalized field name match the
                             CSV header
                             '''
                             cust, created = Customer.objects.get_or_create(
-                                user=row[_('username')], code=row[_('code')])
+                                name=row[_('name')], code=row[_('code')])
                         except:
                             raise ValidationError(
                                 'Is the field {} present in the CSV file '
