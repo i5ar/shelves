@@ -33,7 +33,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
 class CustomerSerializer(serializers.HyperlinkedModelSerializer):
 
-    '''NOTE: Tricky for further development of the API.
+    '''Tricky for further development of the API.
     user = serializers.CharField()
 
     def create(self, validated_data):
@@ -82,7 +82,7 @@ class BinderSerializer(serializers.HyperlinkedModelSerializer):
     container_id = serializers.PrimaryKeyRelatedField(
         queryset=Container.objects.all(), source='container')
 
-    '''NOTE: Tricky for further development of the API.
+    '''Tricky for further development of the API.
     def create(self, validated_data):
         """Create a new binder."""
         # NOTE: Get the user object from the user username if provided
@@ -126,7 +126,7 @@ class ContainerSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Container
-        fields = ('url', 'binder_set', 'coords')
+        fields = ('id', 'url', 'binder_set', 'coords')
         extra_kwargs = {
             'url': {'view_name': "shelves-api:container-detail"},
         }
@@ -142,11 +142,29 @@ class ShelfListSerializer(serializers.HyperlinkedModelSerializer):
     # container_set = serializers.StringRelatedField(many=True)
     container_set = ContainerSerializer(many=True, read_only=True)
 
+    '''The author is created from the generic view.
+    # NOTE: Validate author as a CharField (username).
+    # author_username = serializers.CharField(source='author')
+
+    def create(self, validated_data):
+        """Create a new shelf.
+
+        The ``author_username`` CharField must be converted in
+        the ``author`` User Object.
+        """
+
+        username = validated_data.get('author')
+        author = User.objects.get(username=username)
+        validated_data['author'] = author
+        return Shelf.objects.create(**validated_data)
+    '''
+
+
     class Meta:
         model = Shelf
         fields = (
-            'url', 'id', 'name', 'cols', 'rows', 'nums', 'container_set',
-            'author')
+            # 'author_username',
+            'url', 'id', 'name', 'cols', 'rows', 'nums', 'container_set')
         extra_kwargs = {
             'url': {'view_name': "shelves-api:shelf-detail"},
             'author': {'view_name': "shelves-api:user-detail"},

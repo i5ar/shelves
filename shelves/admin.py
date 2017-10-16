@@ -64,7 +64,7 @@ class ShelfAdmin(admin.ModelAdmin):
     view_size.short_description = _("Size (colsxrows)")
     view_size.empty_value_display = '-'
 
-    list_display = ('name', 'desc', 'view_size', 'nums', 'id')
+    list_display = ('name', 'desc', 'view_size', 'nums', 'id', "author")
 
     def get_readonly_fields(self, request, obj=None):
         """Define readonly fields.
