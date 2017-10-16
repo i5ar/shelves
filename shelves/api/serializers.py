@@ -33,7 +33,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
 class CustomerSerializer(serializers.HyperlinkedModelSerializer):
 
-    '''NOTE: Tricky for further development of APIs.
+    '''NOTE: Tricky for further development of the API.
     user = serializers.CharField()
 
     def create(self, validated_data):
@@ -62,9 +62,10 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Customer
-        fields = ('url', 'name', 'code')  # `name` previusly `user`
+        fields = ('url', 'name', 'code', 'author')  # `name` previusly `user`
         extra_kwargs = {
             'url': {'view_name': "shelves-api:customer-detail"},
+            'author': {'view_name': "shelves-api:user-detail"},
             # 'user': {'view_name': "shelves-api:user-detail"},
         }
 
@@ -72,14 +73,16 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
 class BinderSerializer(serializers.HyperlinkedModelSerializer):
 
     # NOTE: Make readonly fields
-    customer = serializers.StringRelatedField()
+    # customer = serializers.StringRelatedField()
     # container = serializers.PrimaryKeyRelatedField(read_only=True)
 
     # NOTE: Make customer and container writable fields
-    customer = serializers.CharField(allow_null=True, allow_blank=True)
+    # customer_name = serializers.CharField(
+    #     allow_null=True, allow_blank=True, source='customer')
     container_id = serializers.PrimaryKeyRelatedField(
         queryset=Container.objects.all(), source='container')
 
+    '''NOTE: Tricky for further development of the API.
     def create(self, validated_data):
         """Create a new binder."""
         # NOTE: Get the user object from the user username if provided
@@ -99,6 +102,7 @@ class BinderSerializer(serializers.HyperlinkedModelSerializer):
         validated_data['container_id'] = container.id
 
         return Binder.objects.create(**validated_data)
+    '''
 
     class Meta:
         model = Binder
@@ -106,7 +110,7 @@ class BinderSerializer(serializers.HyperlinkedModelSerializer):
             'url', 'title', 'customer', 'color', 'content', 'container_id')
         extra_kwargs = {
             'url': {'view_name': "shelves-api:binder-detail"},
-            # 'customer': {'view_name': "shelves-api:customer-detail"},
+            'customer': {'view_name': "shelves-api:customer-detail"},
             # 'container': {'view_name': "shelves-api:container-detail"},
         }
 
@@ -140,16 +144,19 @@ class ShelfListSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Shelf
-        fields = ('url', 'id', 'name', 'cols', 'rows', 'nums', 'container_set')
+        fields = (
+            'url', 'id', 'name', 'cols', 'rows', 'nums', 'container_set',
+            'author')
         extra_kwargs = {
             'url': {'view_name': "shelves-api:shelf-detail"},
+            'author': {'view_name': "shelves-api:user-detail"},
         }
 
 
 class ShelfDetailSerializer(serializers.HyperlinkedModelSerializer):
 
     container_set = ContainerSerializer(many=True, read_only=True)
-    # Make dimensional fields read only
+    # NOTE: Make dimensional fields read only
     cols = serializers.IntegerField(read_only=True)
     rows = serializers.IntegerField(read_only=True)
     nums = serializers.IntegerField(read_only=True)
