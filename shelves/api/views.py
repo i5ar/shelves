@@ -44,13 +44,17 @@ class CustomerList(generics.ListCreateAPIView):
     serializer_class = CustomerSerializer
 
     def get_queryset(self):
-        # NOTE: Filter current user customers by author.
+        """Filter the customers of the current user by the author."""
         return Customer.objects.filter(author=self.request.user)
 
 
 class CustomerDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Customer.objects.all()
+    # queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
+
+    def get_queryset(self):
+        """Filter the customer of the current user by the author."""
+        return Customer.objects.filter(author=self.request.user)
 
 
 class ShelfList(generics.ListCreateAPIView):
@@ -69,7 +73,7 @@ class ShelfList(generics.ListCreateAPIView):
         serializer.save(author=self.request.user)
 
     def get_queryset(self):
-        # NOTE: Filter current user shelves by author.
+        """Filter the shelves of the current user by the author."""
         return Shelf.objects.filter(author=self.request.user)
 
 
@@ -81,21 +85,37 @@ class ShelfDetail(generics.RetrieveUpdateDestroyAPIView):
     - ``deleteShelf()``
     """
 
-    queryset = Shelf.objects.all()
+    # queryset = Shelf.objects.all()
     serializer_class = ShelfDetailSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    def get_queryset(self):
+        """Filter the shelf of the current user by the author."""
+        return Shelf.objects.filter(author=self.request.user)
 
 
 class ContainerList(generics.ListAPIView):
-    queryset = Container.objects.all()
+    # queryset = Container.objects.all()
     serializer_class = ContainerSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    def get_queryset(self):
+        """Filter the containers of the current user by the author of the
+        shelf.
+        """
+        return Container.objects.filter(shelf__author=self.request.user)
 
 
 class ContainerDetail(generics.RetrieveAPIView):
-    queryset = Container.objects.all()
+    # queryset = Container.objects.all()
     serializer_class = ContainerSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    def get_queryset(self):
+        """Filter the container of the current user by the author of the
+        shelf.
+        """
+        return Container.objects.filter(shelf__author=self.request.user)
 
 
 class BinderList(generics.ListCreateAPIView):
@@ -106,22 +126,38 @@ class BinderList(generics.ListCreateAPIView):
     - ``getBinders()``
     """
 
-    queryset = Binder.objects.all()
+    # queryset = Binder.objects.all()
     serializer_class = BinderSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    def get_queryset(self):
+        """Filter the binders of the current user by the author of the shelf of
+        the container.
+        """
+        user = self.request.user
+        return Binder.objects.filter(container__shelf__author=user)
 
 
 class BinderDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Binder.objects.all()
+    # queryset = Binder.objects.all()
     serializer_class = BinderSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    def get_queryset(self):
+        """Filter the binder of the current user by the author of the shelf of
+        the container.
+        """
+        user = self.request.user
+        return Binder.objects.filter(container__shelf__author=user)
 
 
 class UserList(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = (permissions.IsAdminUser,)
 
 
 class UserDetail(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = (permissions.IsAdminUser,)

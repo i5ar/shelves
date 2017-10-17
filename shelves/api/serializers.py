@@ -10,12 +10,6 @@ from ..models import (
 )
 
 
-from rest_framework.renderers import JSONRenderer
-from rest_framework.parsers import JSONParser
-from django.utils.six import BytesIO
-import json
-
-
 class UserSerializer(serializers.HyperlinkedModelSerializer):
 
     # NOTE: Uncomment if User is also Customer
@@ -158,7 +152,6 @@ class ShelfListSerializer(serializers.HyperlinkedModelSerializer):
         validated_data['author'] = author
         return Shelf.objects.create(**validated_data)
     '''
-
 
     class Meta:
         model = Shelf
