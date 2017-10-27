@@ -43,6 +43,9 @@ class CustomerList(generics.ListCreateAPIView):
     # queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
 
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
     def get_queryset(self):
         """Filter the customers of the current user by the author."""
         return Customer.objects.filter(author=self.request.user)

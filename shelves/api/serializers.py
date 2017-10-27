@@ -27,7 +27,8 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
 class CustomerSerializer(serializers.HyperlinkedModelSerializer):
 
-    '''Tricky for further development of the API.
+    '''
+    # NOTE: Tricky for further development of the API.
     user = serializers.CharField()
 
     def create(self, validated_data):
@@ -56,7 +57,10 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Customer
-        fields = ('url', 'name', 'code', 'author')  # `name` previusly `user`
+        # NOTE: The author is created from the generic view.
+        fields = (
+            # 'author',
+            'id', 'url', 'name', 'code')  # `name` previusly `user`
         extra_kwargs = {
             'url': {'view_name': "shelves-api:customer-detail"},
             'author': {'view_name': "shelves-api:user-detail"},
@@ -76,7 +80,8 @@ class BinderSerializer(serializers.HyperlinkedModelSerializer):
     container_id = serializers.PrimaryKeyRelatedField(
         queryset=Container.objects.all(), source='container')
 
-    '''Tricky for further development of the API.
+    '''
+    # NOTE: Tricky for further development of the API.
     def create(self, validated_data):
         """Create a new binder."""
         # NOTE: Get the user object from the user username if provided
@@ -136,7 +141,7 @@ class ShelfListSerializer(serializers.HyperlinkedModelSerializer):
     # container_set = serializers.StringRelatedField(many=True)
     container_set = ContainerSerializer(many=True, read_only=True)
 
-    '''The author is created from the generic view.
+    '''
     # NOTE: Validate author as a CharField (username).
     # author_username = serializers.CharField(source='author')
 
@@ -155,6 +160,7 @@ class ShelfListSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Shelf
+        # NOTE: The author is created from the generic view.
         fields = (
             # 'author_username',
             'url', 'id', 'name', 'cols', 'rows', 'nums', 'container_set')
