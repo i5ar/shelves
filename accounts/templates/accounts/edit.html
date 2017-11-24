@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load staticfiles i18n %}
+
+
+{% block content %}
+
+
+<h3>{% trans "Account" %}</h3>
+{% if request.user.is_authenticated %}
+    <table>
+        <tbody>
+            <tr>
+                <td>User:</td>
+                <th>{{ request.user.username }}</th>
+            </tr>
+            <tr>
+                <td>Email:</td>
+                <th>{{ request.user.email }}</th>
+            </tr>
+            <tr>
+                <td>{% trans "First name" %}:</td>
+                <th>{{ request.user.first_name }}</th>
+            </tr>
+            <tr>
+                <td>{% trans "Last name" %}:</td>
+                <th>{{ request.user.last_name }}</th>
+            </tr>
+        </tbody>
+    </table>
+{% else %}
+    <a href="{% url 'auth_login' %}">{% trans "Log in" %}</a>
+{% endif %}
+
+<h3>{% trans "User" %}</h3>
+<form action="{% url 'profile:edit-user' %}" method="post">
+    {% csrf_token %}
+    {{ form_user.as_p }}
+    <input name="user" type="submit" value="Submit" />
+</form>
+
+<h3>{% trans "Biography" %}</h3>
+<form action="{% url 'profile:edit-biography' %}" method="post">
+    {% csrf_token %}
+    {{ form_biography.as_p }}
+    <input name="biography" type="submit" value="Submit" />
+</form>
+
+
+{% endblock %}

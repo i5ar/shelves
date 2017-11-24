@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load staticfiles i18n %}
+
+
+{% block content %}
+
+
+<h1>{% trans "Profile" %}</h1>
+<h3>Account</h3>
+<table>
+    <tbody>
+        <tr>
+            <td>User:</td>
+            <th>{{ member.user.username }}</th>
+        </tr>
+        <tr>
+            <td>Email:</td>
+            <th>{{ member.user.email }}</th>
+        </tr>
+        <tr>
+            <td>{% trans "First name" %}:</td>
+            <th>{{ member.user.first_name }}</th>
+        </tr>
+        <tr>
+            <td>{% trans "Last name" %}:</td>
+            <th>{{ member.user.last_name }}</th>
+        </tr>
+        <tr>
+            <td>Membership:</td>
+            <th>{{ member.membership }}</th>
+        </tr>
+    </tbody>
+</table>
+<hr>
+<a href="{% url 'profile:detail' request.user.username %}">{% trans "Detail" %}</a>
+<br>
+<a href="{% url 'profile:edit' %}">{% trans "Edit" %}</a>
+
+
+{% endblock %}

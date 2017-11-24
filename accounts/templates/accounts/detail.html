@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load staticfiles i18n %}
+
+
+{% block content %}
+
+
+<h1>{% trans "Detail" %}</h1>
+<h3>{% trans "Account" %}</h3>
+<table>
+    <tbody>
+        <tr>
+            <td>User:</td>
+            <th>{{ request.user.username }}</th>
+        </tr>
+        <tr>
+            <td>Email:</td>
+            <th>{{ request.user.email }}</th>
+        </tr>
+        <tr>
+            <td>{% trans "First name" %}:</td>
+            <th>{{ request.user.first_name }}</th>
+        </tr>
+        <tr>
+            <td>{% trans "Last name" %}:</td>
+            <th>{{ request.user.last_name }}</th>
+        </tr>
+    </tbody>
+</table>
+
+{% if request.user.biography.gender_visible %}
+<h3>{% trans "Biography" %}</h3>
+<table>
+    <tbody>
+        <tr>
+            <td>{% trans "Gender" %}:</td>
+            <th>{{ request.user.biography.gender }}</th>
+        </tr>
+    </tbody>
+</table>
+{% endif %}
+
+<hr>
+<a href="{% url 'profile:index' %}">{% trans "Profile" %}</a>
+
+
+{% endblock %}

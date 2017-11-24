@@ -49,6 +49,9 @@ INSTALLED_APPS = [
     'taggit',
 
     'django.contrib.admin',
+
+    'registration',  # should be immediately above 'django.contrib.auth'
+
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -196,5 +199,15 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 8
 }
 
+
 # NOTE: django-cors-headers
 CORS_ORIGIN_ALLOW_ALL = True
+
+
+# NOTE: Registration django-registration-redux
+REGISTRATION_OPEN = True
+ACCOUNT_ACTIVATION_DAYS = 7  # One-week activation window
+REGISTRATION_AUTO_LOGIN = True  # Automatically log the user in
+
+
+# LOGIN_REDIRECT_URL = '/'

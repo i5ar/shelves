@@ -13,6 +13,7 @@ from wagtail.wagtaildocs import urls as wagtaildocs_urls
 
 from rest_framework_jwt.views import obtain_jwt_token, verify_jwt_token
 
+from accounts.views import MemberRegistrationView
 from shelves import urls as shelves_urls
 from portables import urls as portables_urls
 from diaries import urls as diaries_urls
@@ -41,6 +42,16 @@ urlpatterns = i18n_patterns(
 
     # https://docs.djangoproject.com/en/1.9/topics/i18n/translation/#the-set-language-redirect-view
     url(r'^i18n/', include('django.conf.urls.i18n')),
+
+    # NOTE: Registration
+    # https://django-registration-redux.readthedocs.io/en/latest/quickstart.html
+    url(r'^accounts/register/$',
+        MemberRegistrationView.as_view(),
+        name='registration_register'),
+    url(r'^accounts/', include('registration.backends.default.urls')),
+
+    # NOTE: Profile
+    url(r'^accounts/profile/', include('accounts.urls', namespace='profile')),
 
     # NOTE: Shelves
     url(r'^shelves/', include(shelves_urls)),
