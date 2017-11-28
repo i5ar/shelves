@@ -17,7 +17,7 @@ from .models import (
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ("code", "name", "author")  # `name` previusly `user`
+    list_display = ("id", "code", "name", "author")  # `name` previusly `user`
 
     fieldsets = [
         (None, {'fields': [('code', 'name')]}),
@@ -64,7 +64,7 @@ class ShelfAdmin(admin.ModelAdmin):
     view_size.short_description = _("Size (colsxrows)")
     view_size.empty_value_display = '-'
 
-    list_display = ('name', 'desc', 'view_size', 'nums', 'id', "author")
+    list_display = ('id', 'name', 'desc', 'view_size', 'nums', 'author')
 
     def get_readonly_fields(self, request, obj=None):
         """Define readonly fields.
@@ -100,7 +100,7 @@ class BinderAdmin(admin.ModelAdmin):
             return obj.customer.code
 
     get_customer_code.short_description = _('Customer code')
-    list_display = ('title', 'customer', 'get_customer_code', 'container')
+    list_display = ('id', 'title', 'customer', 'get_customer_code', 'container')
     list_filter = ('customer', 'container__shelf__name')
 
 

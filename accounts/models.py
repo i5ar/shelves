@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 # from django.contrib.auth import get_user_model
 # User = get_user_model()
 
+# NOTE: Used by Member model and MemberRegistrationForm
 MEMBERSHIP_CHOICES = (
     ('', ''),
     ('free', _('Free')),
@@ -16,7 +17,8 @@ MEMBERSHIP_CHOICES = (
 )
 
 
-class Membership(models.Model):
+class Member(models.Model):
+    """Registered User with Membership."""
     # Existing User model
     # https://docs.djangoproject.com/en/1.8/topics/auth/customizing/#extending-the-existing-user-model
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -34,16 +36,18 @@ class Membership(models.Model):
 
 
 class Biography(models.Model):
+    """User Additional Info."""
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     # https://docs.djangoproject.com/en/1.8/ref/models/fields/#choices
     MALE = 'M'
     FEMALE = 'F'
     GENDER_CHOICES = (
+        ('', ''),
         (MALE, _('Male')),
         (FEMALE, _('Female')),
     )
     gender = models.CharField(
-        max_length=1, choices=GENDER_CHOICES, default=MALE)
+        max_length=1, choices=GENDER_CHOICES, default='')
     gender_visible = models.BooleanField(default=0)
 
     def __str__(self):

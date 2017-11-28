@@ -2,13 +2,13 @@ from django import forms
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
 
-from registration.forms import RegistrationForm
+from registration.forms import RegistrationFormUniqueEmail
 
-from .models import MEMBERSHIP_CHOICES, Biography
+from .models import MEMBERSHIP_CHOICES, Member, Biography
 
 
 # TODO: Use RegistrationFormUniqueEmail
-class MemberRegistrationForm(RegistrationForm):
+class MemberRegistrationForm(RegistrationFormUniqueEmail):
     '''Member fields'''
     membership = forms.ChoiceField(
         label=_('Membership'),
@@ -44,6 +44,13 @@ class UserForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ('email', 'first_name', 'last_name')
+
+
+class MemberForm(forms.ModelForm):
+    """Profile"""
+    class Meta:
+        model = Member
+        fields = ('membership', )
 
 
 class BiographyForm(forms.ModelForm):

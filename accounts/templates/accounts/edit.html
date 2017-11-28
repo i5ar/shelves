@@ -38,6 +38,13 @@
     <input name="user" type="submit" value="Submit" />
 </form>
 
+<h3>{% trans "Member" %}</h3>
+<form action="{% url 'profile:edit-member' %}" method="post">
+    {% csrf_token %}
+    {{ form_member.as_p }}
+    <input name="member" type="submit" value="Submit" />
+</form>
+
 <h3>{% trans "Biography" %}</h3>
 <form action="{% url 'profile:edit-biography' %}" method="post">
     {% csrf_token %}

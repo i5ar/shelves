@@ -35,6 +35,8 @@
 <a href="{% url 'profile:detail' request.user.username %}">{% trans "Detail" %}</a>
 <br>
 <a href="{% url 'profile:edit' %}">{% trans "Edit" %}</a>
+<br>
+<a href="{% url 'auth_logout' %}">{% trans "Log out" %}</a>
 
 
 {% endblock %}

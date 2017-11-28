@@ -60,7 +60,7 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
         # NOTE: The author is created from the generic view.
         fields = (
             # 'author',
-            'id', 'url', 'name', 'code')  # `name` previusly `user`
+            'url', 'id', 'name', 'code')  # `name` previusly `user`
         extra_kwargs = {
             'url': {'view_name': "shelves-api:customer-detail"},
             'author': {'view_name': "shelves-api:user-detail"},
@@ -106,7 +106,8 @@ class BinderSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Binder
         fields = (
-            'url', 'title', 'customer', 'color', 'content', 'container_id')
+            'url', 'id', 'title', 'customer', 'color', 'content',
+            'container_id')
         extra_kwargs = {
             'url': {'view_name': "shelves-api:binder-detail"},
             'customer': {'view_name': "shelves-api:customer-detail"},
@@ -125,7 +126,7 @@ class ContainerSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Container
-        fields = ('id', 'url', 'binder_set', 'coords')
+        fields = ('url', 'id', 'binder_set', 'coords')
         extra_kwargs = {
             'url': {'view_name': "shelves-api:container-detail"},
         }
