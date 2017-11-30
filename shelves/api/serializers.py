@@ -77,6 +77,8 @@ class BinderSerializer(serializers.HyperlinkedModelSerializer):
     # NOTE: Make customer and container writable fields
     # customer_name = serializers.CharField(
     #     allow_null=True, allow_blank=True, source='customer')
+    customer_id = serializers.PrimaryKeyRelatedField(
+        queryset=Customer.objects.all(), source='customer')
     container_id = serializers.PrimaryKeyRelatedField(
         queryset=Container.objects.all(), source='container')
 
@@ -106,11 +108,11 @@ class BinderSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Binder
         fields = (
-            'url', 'id', 'title', 'customer', 'color', 'content',
+            'url', 'id', 'title', 'color', 'content', 'customer_id',
             'container_id')
         extra_kwargs = {
             'url': {'view_name': "shelves-api:binder-detail"},
-            'customer': {'view_name': "shelves-api:customer-detail"},
+            # 'customer': {'view_name': "shelves-api:customer-detail"},
             # 'container': {'view_name': "shelves-api:container-detail"},
         }
 
