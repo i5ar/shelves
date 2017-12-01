@@ -176,7 +176,7 @@ class Binder(models.Model):
         'Customer', on_delete=models.CASCADE,  # related_name='customer'
         blank=True, null=True)
     container = models.ForeignKey(
-        Container, on_delete=models.CASCADE, null=True)
+        Container, on_delete=models.CASCADE)
     content = models.TextField(_('Binder content'), blank=True)
     color = models.CharField(
         _('Color'), blank=True, max_length=6, help_text=_('Hex value.'))

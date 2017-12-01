@@ -66,7 +66,7 @@ INSTALLED_APPS = [
     'accounts',
     'portables',
 
-    'corsheaders',  # if front and back end are on different ports
+    'corsheaders',
     'rest_framework',
 
     'snippets',
@@ -182,7 +182,7 @@ WAGTAIL_SITE_NAME = "gerp"
 BASE_URL = 'http://example.com'
 
 
-# NOTE: Restframework
+# NOTE: django-rest-framework and django-rest-framework-jwt
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
@@ -200,11 +200,24 @@ REST_FRAMEWORK = {
 }
 
 
+# NOTE: django-rest-framework-jwt
+# Allow cookie based authentication
+# JWT_AUTH = {
+#     'JWT_AUTH_COOKIE': 'token',
+# }
+
+
 # NOTE: django-cors-headers
 CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ORIGIN_WHITELIST = (
+#     'localhost:9000',
+#     '127.0.0.1:9000',
+# )
+# Credentials for cookie based authentication
+# CORS_ALLOW_CREDENTIALS = True
 
 
-# NOTE: Registration django-registration-redux
+# NOTE: django-registration-redux
 REGISTRATION_OPEN = True
 ACCOUNT_ACTIVATION_DAYS = 7  # One-week activation window
 REGISTRATION_AUTO_LOGIN = True  # Automatically log the user in

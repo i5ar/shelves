@@ -124,7 +124,7 @@ class BinderAdmin(admin.ModelAdmin):
         'get_customer_code',
         'get_customer_id',
         'get_container_id',
-        'get_shelf_id',)
+        'get_shelf_id')
 
     list_filter = ('customer', 'container__shelf__name')
 

@@ -1,5 +1,4 @@
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
 
 from rest_framework import serializers
 
@@ -64,11 +63,14 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
             'url', 'id', 'name', 'code')  # `name` previusly `user`
         extra_kwargs = {
             'url': {'view_name': "shelves-api:customer-detail"},
-            'author': {'view_name': "shelves-api:user-detail"},
+            # 'author': {'view_name': "shelves-api:user-detail"},
             # 'user': {'view_name': "shelves-api:user-detail"},
         }
 
 
+'''
+# NOTE: HyperlinkedModelSerializer doesn't entirely support namespaces.
+# https://stackoverflow.com/questions/27728989/
 class BinderSerializer(serializers.HyperlinkedModelSerializer):
 
     # NOTE: Make readonly fields
@@ -76,8 +78,6 @@ class BinderSerializer(serializers.HyperlinkedModelSerializer):
     # container = serializers.PrimaryKeyRelatedField(read_only=True)
 
     # NOTE: Make customer and container writable fields
-    # customer_name = serializers.CharField(
-    #     allow_null=True, allow_blank=True, source='customer')
     customer_id = serializers.PrimaryKeyRelatedField(
         queryset=Customer.objects.all(), source='customer')
     container_id = serializers.PrimaryKeyRelatedField(
@@ -87,40 +87,14 @@ class BinderSerializer(serializers.HyperlinkedModelSerializer):
         """
         Raise error when a customer has already been associated with a binder.
 
-        This validation is required as long as `customer_id` is defined as
-         `PrimaryKeyRelatedField`. Otherwise it is automatically applied by the
-         model since customer is a `OneToOneField` relationship.
-
         """
 
         binders = Binder.objects.all()
         customers_id = list(map(lambda x: x.customer.id, binders))
         if data.get('customer').id in customers_id:
+            from django.core.exceptions import ValidationError
             raise ValidationError('This field must be unique.')
         return data
-
-    '''
-    # NOTE: Tricky for further development of the API.
-    def create(self, validated_data):
-        """Create a new binder."""
-        # NOTE: Get the user object from the user username if provided
-        # user_username = validated_data.get('customer')
-        name = validated_data.get('customer')
-        try:
-            # user = User.objects.get(username=user_username)
-            customer = Customer.objects.get(name=name)  # previusly `user=user`
-        except:
-            customer = None
-        validated_data['customer'] = customer
-
-        # NOTE: Get the container object from the container id
-        # https://groups.google.com/forum/#!topic/django-rest-framework/5twgbh427uQ
-        instance = validated_data.get('container')
-        container = Container.objects.get(id=instance.id)
-        validated_data['container_id'] = container.id
-
-        return Binder.objects.create(**validated_data)
-    '''
 
     class Meta:
         model = Binder
@@ -132,6 +106,18 @@ class BinderSerializer(serializers.HyperlinkedModelSerializer):
             # 'customer': {'view_name': "shelves-api:customer-detail"},
             # 'container': {'view_name': "shelves-api:container-detail"},
         }
+'''
+
+
+class BinderSerializer(serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name="shelves-api:binder-detail",
+    )
+
+    class Meta:
+        model = Binder
+        fields = (
+            'url', 'id', 'title', 'color', 'content', 'customer', 'container')
 
 
 class ContainerSerializer(serializers.HyperlinkedModelSerializer):
@@ -186,7 +172,7 @@ class ShelfListSerializer(serializers.HyperlinkedModelSerializer):
             'url', 'id', 'name', 'cols', 'rows', 'nums', 'container_set')
         extra_kwargs = {
             'url': {'view_name': "shelves-api:shelf-detail"},
-            'author': {'view_name': "shelves-api:user-detail"},
+            # 'author': {'view_name': "shelves-api:user-detail"},
         }
 
 
