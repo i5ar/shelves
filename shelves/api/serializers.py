@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 
 from rest_framework import serializers
 
@@ -81,6 +82,22 @@ class BinderSerializer(serializers.HyperlinkedModelSerializer):
         queryset=Customer.objects.all(), source='customer')
     container_id = serializers.PrimaryKeyRelatedField(
         queryset=Container.objects.all(), source='container')
+
+    def validate(self, data):
+        """
+        Raise error when a customer has already been associated with a binder.
+
+        This validation is required as long as `customer_id` is defined as
+         `PrimaryKeyRelatedField`. Otherwise it is automatically applied by the
+         model since customer is a `OneToOneField` relationship.
+
+        """
+
+        binders = Binder.objects.all()
+        customers_id = list(map(lambda x: x.customer.id, binders))
+        if data.get('customer').id in customers_id:
+            raise ValidationError('This field must be unique.')
+        return data
 
     '''
     # NOTE: Tricky for further development of the API.

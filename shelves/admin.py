@@ -99,8 +99,33 @@ class BinderAdmin(admin.ModelAdmin):
         if obj.customer:
             return obj.customer.code
 
+    def get_customer_id(self, obj):
+        if obj.customer:
+            return obj.customer.id
+
+    def get_container_id(self, obj):
+        if obj.container:
+            return obj.container.id
+
+    def get_shelf_id(self, obj):
+        if obj.container.shelf:
+            return obj.container.shelf.id
+
     get_customer_code.short_description = _('Customer code')
-    list_display = ('id', 'title', 'customer', 'get_customer_code', 'container')
+    get_customer_id.short_description = _('Customer id')
+    get_container_id.short_description = _('Container id')
+    get_shelf_id.short_description = _('Shelf id')
+
+    list_display = (
+        'id',
+        'title',
+        'updated',
+        'customer',
+        'get_customer_code',
+        'get_customer_id',
+        'get_container_id',
+        'get_shelf_id',)
+
     list_filter = ('customer', 'container__shelf__name')
 
 
