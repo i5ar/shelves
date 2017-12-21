@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+
+{% block title %}
+{% trans "Binder" %}
+{% endblock %}
+
+
+{% block content %}
+<h1>{% trans "Binder" %} {{ object.id }}</h1>
+<ul>
+    <li>{{ object.title }}</li>
+    <li>{{ object.customer }}</li>
+    <li>{{ object.container }}</li>
+    <li>{{ object.content }}</li>
+    <li>{{ object.color }}</li>
+    <li>{{ object.updated }}</li>
+</ul>
+
+<hr>
+<ul>
+    <li><a href="{% url 'shelves:index' %}">{% trans "Index" %}</a></li>
+    <li><a href="{% url 'shelves:binders' %}">{% trans "Binders" %}</a></li>
+</ul>
+{% endblock %}

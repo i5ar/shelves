@@ -1,16 +1,21 @@
-from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponseRedirect
-from django.core.urlresolvers import reverse
+import operator
+from functools import reduce
+
+from django.shortcuts import render
 from django.core.exceptions import ValidationError
-from django.core.files.storage import default_storage
 from django.utils.translation import ugettext as _
+from django.views.generic.list import ListView
+from django.views.generic.detail import DetailView
+from django.db.models import Q
 
 from .forms import UploadForm
-from .models import Customer
+from .models import Customer, Shelf, Binder
 
+'''
 import csv
-import codecs # Python 2
-from io import TextIOWrapper # Python 3
+import codecs  # Python 2
+from io import TextIOWrapper  # Python 3
+'''
 
 
 def import_data(request):
@@ -74,11 +79,60 @@ def import_data(request):
     else:
         form = UploadForm()
 
-    entries = Customer.objects.all()
+    customers = Customer.objects.all()
+    shelves = Shelf.objects.all()
+    binders = Binder.objects.all()
 
     context = {
         'form': form,
-        'entries': entries
+        'customers': customers,
+        'shelves': shelves,
+        'binders': binders,
     }
 
     return render(request, 'shelves/index.html', context)
+
+
+# Search
+# https://www.calazan.com/adding-basic-search-to-your-django-site/
+class BinderListView(ListView):
+    model = Binder
+    # paginate_by = 8
+
+    def get_queryset(self):
+        """Override queryset.
+
+        Search by
+        ``title``,
+        ``content``,
+        ``customer__code``,
+        ``customer__name``.
+
+        """
+
+        queryset = super(BinderListView, self).get_queryset()
+        query = self.request.GET.get('q')
+        if query:
+            query_list = query.split()
+            # TODO: DRY because of ``BinderList`` queryset in API.
+            queryset = queryset.filter(
+                reduce(
+                    operator.and_,
+                    (Q(title__icontains=q) for q in query_list)
+                ) | reduce(
+                    operator.and_,
+                    (Q(content__icontains=q) for q in query_list)
+                ) | reduce(
+                    operator.and_,
+                    (Q(customer__code__icontains=q) for q in query_list)
+                ) | reduce(
+                    operator.and_,
+                    (Q(customer__name__icontains=q) for q in query_list)
+                )
+            )
+
+        return queryset
+
+
+class BinderDetailView(DetailView):
+    model = Binder

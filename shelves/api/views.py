@@ -1,4 +1,8 @@
+import operator
+from functools import reduce
+
 from django.contrib.auth.models import User
+from django.db.models import Q
 
 from rest_framework import generics
 from rest_framework import permissions
@@ -121,6 +125,8 @@ class ContainerDetail(generics.RetrieveAPIView):
         return Container.objects.filter(shelf__author=self.request.user)
 
 
+
+
 class BinderList(generics.ListCreateAPIView):
     """List and create binders.
 
@@ -138,7 +144,31 @@ class BinderList(generics.ListCreateAPIView):
         the container.
         """
         user = self.request.user
-        return Binder.objects.filter(container__shelf__author=user)
+        queryset = Binder.objects.filter(container__shelf__author=user)
+
+        # Filtering against query parameters
+        # http://www.django-rest-framework.org/api-guide/filtering/#filtering-against-query-parameters
+        query = self.request.query_params.get('q', None)
+        if query is not None:
+            query_list = query.split()
+            # TODO: DRY because of ``BinderListView`` queryset.
+            queryset = queryset.filter(
+                reduce(
+                    operator.and_,
+                    (Q(title__icontains=q) for q in query_list)
+                ) | reduce(
+                    operator.and_,
+                    (Q(content__icontains=q) for q in query_list)
+                ) | reduce(
+                    operator.and_,
+                    (Q(customer__code__icontains=q) for q in query_list)
+                ) | reduce(
+                    operator.and_,
+                    (Q(customer__name__icontains=q) for q in query_list)
+                )
+            )
+
+        return queryset
 
 
 class BinderDetail(generics.RetrieveUpdateDestroyAPIView):

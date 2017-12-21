@@ -54,7 +54,7 @@ urlpatterns = i18n_patterns(
     url(r'^accounts/profile/', include('accounts.urls', namespace='profile')),
 
     # NOTE: Shelves
-    url(r'^shelves/', include(shelves_urls)),
+    url(r'^shelves/', include(shelves_urls, namespace='shelves')),
 
     # NOTE: Portables
     url(r'^portables/', include(portables_urls)),

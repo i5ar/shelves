@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+
+{% block title %}
+{% trans "Binders" %}
+{% endblock %}
+
+
+{% block content %}
+<h1>{% trans "Binders" %}</h1>
+<form action="{% url 'shelves:binders' %}" method="get" accept-charset="utf-8">
+    <input type="search" name="q">
+    <button type="submit">Search</button>
+</form>
+
+{% if object_list %}
+<ul>
+    {% for binder in object_list %}
+    <li>
+        <a href="{% url 'shelves:binders-detail' binder.id %}">{{ binder.id }}</a>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>There are no binders.</p>
+{% endif %}
+
+<hr>
+<ul>
+    <li><a href="{% url 'shelves:index' %}">{% trans "Index" %}</a></li>
+    <li><a href="{% url 'shelves:binders' %}">{% trans "Binders" %}</a></li>
+</ul>
+{% endblock %}

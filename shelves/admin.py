@@ -93,7 +93,12 @@ class ContainerAdmin(admin.ModelAdmin):
 @admin.register(Binder)
 class BinderAdmin(admin.ModelAdmin):
     # search_fields = ('title', 'customer__code', 'customer__user__username')
-    search_fields = ('title', 'customer__code', 'customer__name')
+    search_fields = (
+        'title',
+        'content',
+        'customer__code',
+        'customer__name',
+    )
 
     def get_customer_code(self, obj):
         if obj.customer:

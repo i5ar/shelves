@@ -8,17 +8,40 @@
 
 
 {% block content %}
-        <form action="" method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <input type="submit" name="Submit" />
-        </form>
+<h1>{% trans "Index" %}</h1>
+<h2>{% trans "Upload customers" %}</h2>
+<form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" name="Submit" />
+</form>
+<h2>{% trans "List shelves" %}</h2>
+<div>
+    <h3>{% trans "Customers" %} <code>[:3]</code></h3>
+    <ul>
+        {% for customer in customers|slice:":3" %}
+        <li>{{ customer }};</li>
+        {% endfor %}
+        <li>...</li>
+    </ul>
+    <h3>{% trans "Shelves" %} <code>[:3]</code></h3>
+    <ul>
+        {% for shelf in shelves|slice:":3" %}
+        <li>{{ shelf }};</li>
+        {% endfor %}
+        <li>...</li>
+    </ul>
+    <h3>{% trans "Binders" %} <code>[:3]</code></h3>
+    <ul>
+        {% for binder in binders|slice:":3" %}
+        <li>{{ binder }};</li>
+        {% endfor %}
+        <li>...</li>
+    </ul>
+</div>
 
-        <div>
-            <ul>
-                {% for entry in entries %}
-                <li>{{ entry }}</li>
-                {% endfor %}
-            </ul>
-        </div>
+<hr>
+<ul>
+    <li><a href="{% url 'shelves:binders' %}">{% trans "Binders" %}</a></li>
+</ul>
 {% endblock %}
