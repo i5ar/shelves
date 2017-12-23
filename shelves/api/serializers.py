@@ -117,7 +117,15 @@ class BinderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Binder
         fields = (
-            'url', 'id', 'title', 'color', 'content', 'customer', 'container')
+            'url',
+            'id',
+            'title',
+            'color',
+            'content',
+            'customer',
+            'container',
+            'updated'
+        )
 
 
 class ContainerSerializer(serializers.HyperlinkedModelSerializer):

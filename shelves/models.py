@@ -32,7 +32,7 @@ class Customer(models.Model):
 
     def __str__(self):
         # return self.user.username
-        return self.name
+        return '{}'.format(self.id)
 
     class Meta:
         verbose_name = _('Customer')
@@ -80,7 +80,7 @@ class Shelf(models.Model):
         _('Rows'), validators=[MinValueValidator(1)],
         help_text=_('The number of rows'), blank=True, null=True)
     nums = models.PositiveIntegerField(
-        _('Containers'), validators=[MinValueValidator(1)],
+        _('Containers number'), validators=[MinValueValidator(1)],
         help_text=_('The number of containers'), blank=True, null=True)
 
     author = models.ForeignKey(
@@ -140,7 +140,7 @@ class Shelf(models.Model):
                     container.save()
 
     def __str__(self):
-        return '{}'.format(self.name)
+        return '{}'.format(self.id)
 
     class Meta:
         verbose_name = _('Shelf')
@@ -183,7 +183,7 @@ class Binder(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return '{}'.format(self.customer)
+        return '{}'.format(self.id)
 
     class Meta:
         verbose_name = _('Binder')

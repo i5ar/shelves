@@ -17,14 +17,23 @@ from .models import (
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ("id", "code", "name", "author")  # `name` previusly `user`
+    list_display = (
+        "id",
+        "code",
+        "name",  # `name` previusly `user`
+        "get_author_username"
+    )
 
-    fieldsets = [
-        (None, {'fields': [('code', 'name')]}),
-    ]
+    def get_author_username(self, obj):
+        return obj.author.username
+
+    get_author_username.short_description = _('Author username')
+
+    # NOTE: Exclude author from fields and save it as current user.
+    exclude = ('author',)
 
     def save_model(self, request, obj, form, change):
-        """Save author as current user."""
+        """Save ``author`` as current user."""
         if getattr(obj, 'author', None) is None:
             obj.author = request.user
         obj.save()
@@ -61,10 +70,22 @@ class ShelfAdmin(admin.ModelAdmin):
         if obj.cols and obj.rows:
             return "{}x{}".format(obj.cols, obj.rows)
 
-    view_size.short_description = _("Size (colsxrows)")
+    view_size.short_description = _("Size")
     view_size.empty_value_display = '-'
 
-    list_display = ('id', 'name', 'desc', 'view_size', 'nums', 'author')
+    list_display = (
+        'id',
+        'name',
+        'desc',
+        'view_size',
+        'nums',
+        'get_author_username'
+    )
+
+    def get_author_username(self, obj):
+        return obj.author.username
+
+    get_author_username.short_description = _('Author username')
 
     def get_readonly_fields(self, request, obj=None):
         """Define readonly fields.
@@ -79,10 +100,15 @@ class ShelfAdmin(admin.ModelAdmin):
 
 @admin.register(Container)
 class ContainerAdmin(admin.ModelAdmin):
-    list_display = ('id', 'shelf', 'col', 'row')
+    list_display = ('id', 'col', 'row', 'shelf', 'get_shelf_name')
     readonly_fields = ('shelf', 'col', 'row')
     fields = ('shelf', ('col', 'row'))
     # prepopulated_fields = {'jsoncoord': ('col', 'row',)}
+
+    def get_shelf_name(self, obj):
+        return obj.shelf.name
+
+    get_shelf_name.short_description = _('Shelf name')
 
     # https://stackoverflow.com/questions/4043843/
     def has_delete_permission(self, request, obj=None):
@@ -100,13 +126,13 @@ class BinderAdmin(admin.ModelAdmin):
         'customer__name',
     )
 
+    def get_customer_name(self, obj):
+        if obj.customer:
+            return obj.customer.name
+
     def get_customer_code(self, obj):
         if obj.customer:
             return obj.customer.code
-
-    def get_customer_id(self, obj):
-        if obj.customer:
-            return obj.customer.id
 
     def get_container_id(self, obj):
         if obj.container:
@@ -117,9 +143,9 @@ class BinderAdmin(admin.ModelAdmin):
             return obj.container.shelf.id
 
     get_customer_code.short_description = _('Customer code')
-    get_customer_id.short_description = _('Customer id')
-    get_container_id.short_description = _('Container id')
-    get_shelf_id.short_description = _('Shelf id')
+    get_customer_name.short_description = _('Customer name')
+    get_container_id.short_description = _('Container')
+    get_shelf_id.short_description = _('Shelf')
 
     list_display = (
         'id',
@@ -127,7 +153,7 @@ class BinderAdmin(admin.ModelAdmin):
         'updated',
         'customer',
         'get_customer_code',
-        'get_customer_id',
+        'get_customer_name',
         'get_container_id',
         'get_shelf_id')
 
