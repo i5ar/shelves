@@ -107,8 +107,9 @@ class ContainerList(generics.ListAPIView):
     # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
-        """Filter the containers of the current user by the author of the
-        shelf.
+        """
+        Filter the containers of the current user by the author of the shelf.
+
         """
         return Container.objects.filter(shelf__author=self.request.user)
 
@@ -125,8 +126,6 @@ class ContainerDetail(generics.RetrieveAPIView):
         return Container.objects.filter(shelf__author=self.request.user)
 
 
-
-
 class BinderList(generics.ListCreateAPIView):
     """List and create binders.
 
@@ -140,8 +139,10 @@ class BinderList(generics.ListCreateAPIView):
     # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
-        """Filter the binders of the current user by the author of the shelf of
+        """
+        Filter the binders of the current user by the author of the shelf of
         the container.
+
         """
         user = self.request.user
         queryset = Binder.objects.filter(container__shelf__author=user)
@@ -177,8 +178,10 @@ class BinderDetail(generics.RetrieveUpdateDestroyAPIView):
     # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
-        """Filter the binder of the current user by the author of the shelf of
+        """
+        Filter the binder of the current user by the author of the shelf of
         the container.
+
         """
         user = self.request.user
         return Binder.objects.filter(container__shelf__author=user)

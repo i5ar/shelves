@@ -1,6 +1,10 @@
 from django.contrib.auth.models import User
+from django.conf import settings
 
 from rest_framework import serializers
+
+import os
+import logging
 
 from ..models import (
     Customer,
@@ -195,3 +199,14 @@ class ShelfDetailSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Shelf
         fields = ('name', 'desc', 'cols', 'rows', 'nums', 'container_set')
+
+    # NOTE: Logging the container set.
+    logging.basicConfig(
+        filename = os.path.join(settings.BASE_DIR, 'api.log'),
+        level = logging.DEBUG if settings.DEBUG else logging.WARNING,
+        format = "%(levelname)s %(asctime)s %(message)s",
+        filemode = "w"
+    )
+    logger = logging.getLogger()
+    logger.info("Container set.")
+    logger.debug(container_set)
