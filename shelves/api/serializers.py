@@ -1,16 +1,26 @@
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 from rest_framework import serializers
 
 import os
 import logging
+from collections import OrderedDict
 
 from ..models import (
     Customer,
     Container,
     Shelf,
     Binder,
+)
+
+# NOTE: Logging configuration used by the debug window in `startsession.sh`.
+logging.basicConfig(
+    filename = os.path.join(settings.BASE_DIR, 'api.log'),
+    level = logging.DEBUG if settings.DEBUG else logging.WARNING,
+    format = "%(levelname)s %(asctime)s %(message)s",
+    filemode = "w"  # Run `tail` with `-vn +1` option to output all the rows
 )
 
 
@@ -71,7 +81,6 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
             # 'user': {'view_name': "shelves-api:user-detail"},
         }
 
-
 '''
 # NOTE: HyperlinkedModelSerializer doesn't entirely support namespaces.
 # https://stackoverflow.com/questions/27728989/
@@ -113,7 +122,102 @@ class BinderSerializer(serializers.HyperlinkedModelSerializer):
 '''
 
 
+class BinderCustomerSerializer(serializers.ModelSerializer):
+    """For the specific use of the ``BinderSerializer``.
+
+    - Remove ``UniqueValidator`` from the Customer validators;
+    - Allow a blank customer code field.
+
+    """
+
+    def validate(self, data):
+        """
+        Raise validation errors for the customer nested serializer.
+        Hence the unique validator has been excluded from the serializer class.
+
+        .. _Optional fields:
+           http://www.django-rest-framework.org/api-guide/validators/#optional-fields
+
+        """
+
+        # print('\033[1m' 'DEBUG')
+
+        instances = Customer.objects.all()
+        customers = list(map(lambda c: OrderedDict(
+            name=c.name,
+            code=c.code
+        ), instances))
+        customers_codes = [c['code'] for c in customers]
+
+        if not data.get('code') and data.get('name'):
+            raise ValidationError(
+                'Not a valid customer: '
+                'The customer code is required within the customer name.')
+
+        if data.get('code'):
+
+            if data not in customers and data.get('code') in customers_codes:
+                raise ValidationError(
+                    'Not a valid customer: '
+                    'The customer code does not mach with the customer name.')
+
+            # NOTE: Get customer
+            binders = Binder.objects.all()
+            binders_customers = [b.customer for b in binders]
+            # Filter out binders without a customer
+            binders_customers = list(filter(None, binders_customers))
+            binders_customers_codes = [c.code for c in binders_customers]
+            if data.get('code') in binders_customers_codes:
+                raise ValidationError('This customer has already a binder.')
+
+        # print('\033[0m')
+
+        return data
+
+    class Meta:
+        model = Customer
+        fields = ('id', 'name', 'code')
+        # HACK: Nested serializer with unique constrain.
+        # https://github.com/encode/django-rest-framework/issues/2996
+        extra_kwargs = {
+            'code': {
+                # Allow to associate an existent customer to a binder.
+                # http://www.django-rest-framework.org/api-guide/validators/#limitations-of-validators
+                'validators': [],
+                # Allow to create a binder without an associate customer.
+                'allow_blank': True
+            },
+        }
+
+
 class BinderSerializer(serializers.ModelSerializer):
+
+    # HACK: Writable nested serializer is not automatic.
+    # https://github.com/encode/django-rest-framework/issues/2996
+    customer = BinderCustomerSerializer(many=False, read_only=False)
+
+    # TODO: Validate the unique code field.
+    def create(self, validated_data):
+        customer_data = validated_data.pop('customer')
+
+        # NOTE: Logging the binder.
+        logger = logging.getLogger()
+        logger.info("The context request user.")
+        logger.debug(self.context['request'].user)
+        logger.debug(self)
+
+        if customer_data.get("code"):
+            # Create customer
+            customer, created = Customer.objects.get_or_create(
+                author=self.context['request'].user,
+                **customer_data)
+            # Create binder with customer
+            binder = Binder.objects.create(customer=customer, **validated_data)
+        else:
+            # Create binder without customer
+            binder = Binder.objects.create(**validated_data)
+        return binder
+
     url = serializers.HyperlinkedIdentityField(
         view_name="shelves-api:binder-detail",
     )
@@ -126,8 +230,8 @@ class BinderSerializer(serializers.ModelSerializer):
             'title',
             'color',
             'content',
-            'customer',
             'container',
+            'customer',
             'updated'
         )
 
@@ -138,7 +242,7 @@ class ContainerSerializer(serializers.HyperlinkedModelSerializer):
     coords = serializers.SerializerMethodField()
 
     def get_coords(self, obj):
-        """Set coordinates array instead of separate col and row fields."""
+        """Get coordinates as an array."""
         return [obj.col, obj.row]
 
     class Meta:
@@ -199,14 +303,3 @@ class ShelfDetailSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Shelf
         fields = ('name', 'desc', 'cols', 'rows', 'nums', 'container_set')
-
-    # NOTE: Logging the container set.
-    logging.basicConfig(
-        filename = os.path.join(settings.BASE_DIR, 'api.log'),
-        level = logging.DEBUG if settings.DEBUG else logging.WARNING,
-        format = "%(levelname)s %(asctime)s %(message)s",
-        filemode = "w"
-    )
-    logger = logging.getLogger()
-    logger.info("Container set.")
-    logger.debug(container_set)

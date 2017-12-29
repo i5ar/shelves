@@ -47,7 +47,7 @@ sleep 0.5
 tmux send-keys -t gerp:1 "source bin/activate" C-m
 sleep 0.25
 tmux send-keys -t gerp:1 "cd $back_end" C-m
-tmux send-keys -t gerp:1 "tail -vn +1 *.log | pygmentize -l python" C-m
+tmux send-keys -t gerp:1 "tail -f -vn +1 *.log" C-m
 
 tmux new-window -t gerp:2 -n front_end
 sleep 0.5

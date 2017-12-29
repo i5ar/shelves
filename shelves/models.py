@@ -13,7 +13,7 @@ import csv
 
 class Customer(models.Model):
     # user = models.OneToOneField(User, on_delete=models.CASCADE)
-    name = models.CharField(_('Name'), max_length=64, blank=True)
+    name = models.CharField(_('Name'), max_length=32, blank=True)
 
     # @property
     # def name(self):
@@ -23,9 +23,14 @@ class Customer(models.Model):
     #     """
     #     return self.user.username
 
-    code = models.IntegerField(
-        _('Code'), null=True, unique=True,
-        help_text=_('Customer code must not be confused with user code!'))
+    # TODO: If code empty generate a username from the name if there is a name.
+    code = models.CharField(
+        _('Code'),
+        unique=True,
+        max_length=16,
+        help_text=_(
+            "The customer code must not be confused with the customer id "
+            "or the user id!"))
 
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
