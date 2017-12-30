@@ -250,7 +250,7 @@ class Upload(models.Model):
 
 
 class Upload(models.Model):
-    """Upload Customers (no Users)"""
+    """Upload Customers"""
     csv_file = models.FileField('File CSV', upload_to='docs')
 
     def save(self, *args, **kwargs):

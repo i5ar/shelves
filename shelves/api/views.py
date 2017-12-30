@@ -4,19 +4,20 @@ from functools import reduce
 from django.contrib.auth.models import User
 from django.db.models import Q
 
-from rest_framework import generics
+from rest_framework import generics, viewsets
 from rest_framework import permissions
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 
 from .serializers import (
+    UserSerializer,
     CustomerSerializer,
     ShelfListSerializer,
     ShelfDetailSerializer,
     ContainerSerializer,
-    BinderSerializer,
-    UserSerializer,
+    BinderListSerializer,
+    BinderCreateRetrieveUpdateDestroySerializer,
 )
 
 from ..models import (
@@ -126,65 +127,59 @@ class ContainerDetail(generics.RetrieveAPIView):
         return Container.objects.filter(shelf__author=self.request.user)
 
 
-class BinderList(generics.ListCreateAPIView):
-    """List and create binders.
-
-    Front methods:
-    - ``postBinder()``
-    - ``getBinders()``
-    """
+class BinderViewSet(viewsets.ModelViewSet):
+    """Binder view set based on different serializers."""
 
     # queryset = Binder.objects.all()
-    serializer_class = BinderSerializer
+    # serializer_class = BinderSerializer
     # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return BinderListSerializer
+        else:
+            return BinderCreateRetrieveUpdateDestroySerializer
 
     def get_queryset(self):
         """
         Filter the binders of the current user by the author of the shelf of
         the container.
-
+        Filter the binders against query parameters.
         """
+
+        # NOTE: Debug the action.
+        # http://www.django-rest-framework.org/api-guide/viewsets/#viewset-actions
+        # print('\033[1m' 'DEBUG', end=' ')
+        # print(self.action)
+        # print('\033[0m')
+
         user = self.request.user
         queryset = Binder.objects.filter(container__shelf__author=user)
 
-        # Filtering against query parameters
-        # http://www.django-rest-framework.org/api-guide/filtering/#filtering-against-query-parameters
-        query = self.request.query_params.get('q', None)
-        if query is not None:
-            query_list = query.split()
-            # TODO: DRY because of ``BinderListView`` queryset.
-            queryset = queryset.filter(
-                reduce(
-                    operator.and_,
-                    (Q(title__icontains=q) for q in query_list)
-                ) | reduce(
-                    operator.and_,
-                    (Q(content__icontains=q) for q in query_list)
-                ) | reduce(
-                    operator.and_,
-                    (Q(customer__code__icontains=q) for q in query_list)
-                ) | reduce(
-                    operator.and_,
-                    (Q(customer__name__icontains=q) for q in query_list)
+        if self.action == 'list':
+            # Filtering against query parameters
+            # http://www.django-rest-framework.org/api-guide/filtering/#filtering-against-query-parameters
+            query = self.request.query_params.get('q', None)
+            if query is not None:
+                query_list = query.split()
+                # TODO: DRY because of ``BinderListView`` queryset.
+                queryset = queryset.filter(
+                    reduce(
+                        operator.and_,
+                        (Q(title__icontains=q) for q in query_list)
+                    ) | reduce(
+                        operator.and_,
+                        (Q(content__icontains=q) for q in query_list)
+                    ) | reduce(
+                        operator.and_,
+                        (Q(customer__code__icontains=q) for q in query_list)
+                    ) | reduce(
+                        operator.and_,
+                        (Q(customer__name__icontains=q) for q in query_list)
+                    )
                 )
-            )
 
         return queryset
-
-
-class BinderDetail(generics.RetrieveUpdateDestroyAPIView):
-    # queryset = Binder.objects.all()
-    serializer_class = BinderSerializer
-    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-
-    def get_queryset(self):
-        """
-        Filter the binder of the current user by the author of the shelf of
-        the container.
-
-        """
-        user = self.request.user
-        return Binder.objects.filter(container__shelf__author=user)
 
 
 class UserList(generics.ListAPIView):

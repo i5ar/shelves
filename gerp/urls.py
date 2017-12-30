@@ -19,6 +19,8 @@ from portables import urls as portables_urls
 from diaries import urls as diaries_urls
 
 
+admin.site.site_title = admin.site.site_header = 'Admin'
+
 urlpatterns = i18n_patterns(
     url(r'^django-admin/', include(admin.site.urls)),
 

@@ -21,8 +21,16 @@ class CustomerAdmin(admin.ModelAdmin):
         "id",
         "code",
         "name",  # `name` previusly `user`
-        "get_author_username"
+        "get_binder_id",
+        "get_author_username",
     )
+
+    def get_binder_id(self, obj):
+        binder = Binder.objects.get(customer=obj)
+        if binder.id:
+            return "{}".format(binder.id)
+
+    get_binder_id.short_description = _("Binder id")
 
     def get_author_username(self, obj):
         return obj.author.username
@@ -79,8 +87,17 @@ class ShelfAdmin(admin.ModelAdmin):
         'desc',
         'view_size',
         'nums',
-        'get_author_username'
+        'get_binders_number',
+        'get_author_username',
     )
+
+    def get_binders_number(self, obj):
+        binders = Binder.objects.all()
+        containers_with_binders = set([i.container for i in binders])
+        containers = set(Container.objects.filter(shelf=obj))
+        return len(containers_with_binders & containers)
+
+    get_binders_number.short_description = _('Binders number')
 
     def get_author_username(self, obj):
         return obj.author.username

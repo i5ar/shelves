@@ -13,22 +13,18 @@ if [ ! -d "$venv" ] || [ ! -d "$back_end" ] || [ ! -d "$front_end" ]; then
     echo "One or more directories are missing."; exit 1;
 fi
 
-# Check commands
+# Check programs
 # https://stackoverflow.com/questions/592620/
-command -v au > /dev/null 2>&1 || {
-  echo 1>&2 "Requiere Aurelia.";
-  exit 1;
-}
-command -v git > /dev/null 2>&1 || {
-  echo 1>&2 "Requiere Git.";
-  exit 1;
-}
-command -v pygmentize > /dev/null 2>&1 || {
-  echo 1>&2 "Requiere Pygments.";
-  exit 1;
-}
+command -v chrome > /dev/null 2>&1 || { echo 1>&2 "Requiere Chrome."; exit 1; }
+command -v au > /dev/null 2>&1 || { echo 1>&2 "Requiere Aurelia."; exit 1; }
+command -v git > /dev/null 2>&1 || { echo 1>&2 "Requiere Git."; exit 1; }
 
-# Run script
+# Open tabs
+chrome http://127.0.0.1:8000/en/django-admin/shelves/ &
+chrome http://127.0.0.1:8000/en/api/shelves/ &
+chrome http://127.0.0.1:9000 &
+
+# Run commands
 # https://stackoverflow.com/questions/15257130/
 cd "$venv"
 tmux new-session -d -s gerp -n back_end
