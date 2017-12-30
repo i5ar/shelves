@@ -13,10 +13,15 @@ urlpatterns = [
     url(r'^customers/(?P<pk>[0-9]+)/$', views.CustomerDetail.as_view(),
         name="customer-detail"),
 
-    url(r'^binders/$', views.BinderList.as_view(),
-        name="binder-list"),
-    url(r'^binders/(?P<pk>[0-9]+)/$', views.BinderDetail.as_view(),
-        name="binder-detail"),
+    url(r'^binders/$', views.BinderViewSet.as_view({
+        'get': 'list',
+        'post': 'create'
+    }), name="binder-list"),
+    url(r'^binders/(?P<pk>[0-9]+)/$', views.BinderViewSet.as_view({
+        'get': 'retrieve',
+        'put': 'update',
+        'delete': 'destroy',
+    }), name="binder-detail"),
 
     url(r'^containers/$', views.ContainerList.as_view(),
         name="container-list"),

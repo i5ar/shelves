@@ -74,7 +74,11 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
         # NOTE: The author is created from the generic view.
         fields = (
             # 'author',
-            'url', 'id', 'name', 'code')  # `name` previusly `user`
+            'url',
+            'id',
+            'name',  # `name` previusly `user`
+            'code'
+        )
         extra_kwargs = {
             'url': {'view_name': "shelves-api:customer-detail"},
             # 'author': {'view_name': "shelves-api:user-detail"},
@@ -121,7 +125,7 @@ class BinderSerializer(serializers.HyperlinkedModelSerializer):
         }
 '''
 
-
+'''
 class BinderCustomerSerializer(serializers.ModelSerializer):
     """For the specific use of the ``BinderSerializer``.
 
@@ -234,11 +238,48 @@ class BinderSerializer(serializers.ModelSerializer):
             'customer',
             'updated'
         )
+'''
+
+class BinderListSerializer(serializers.ModelSerializer):
+
+    url = serializers.HyperlinkedIdentityField(
+        view_name="shelves-api:binder-detail",
+    )
+
+    customer = CustomerSerializer(many=False, read_only=True)
+
+    class Meta:
+        model = Binder
+        fields = (
+            'url',
+            'id',
+            'title',
+            'color',
+            'content',
+            'container',
+            'customer',
+            'updated'
+        )
+
+
+class BinderCreateRetrieveUpdateDestroySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Binder
+        fields = (
+            'id',
+            'title',
+            'color',
+            'content',
+            'container',
+            'customer',
+            'updated'
+        )
 
 
 class ContainerSerializer(serializers.HyperlinkedModelSerializer):
 
-    binder_set = BinderSerializer(many=True, read_only=True)
+    binder_set = BinderListSerializer(many=True, read_only=True)
     coords = serializers.SerializerMethodField()
 
     def get_coords(self, obj):
@@ -285,7 +326,8 @@ class ShelfListSerializer(serializers.HyperlinkedModelSerializer):
         # NOTE: The author is created from the generic view.
         fields = (
             # 'author_username',
-            'url', 'id', 'name', 'cols', 'rows', 'nums', 'container_set')
+            'url', 'id', 'name', 'cols', 'rows', 'nums', 'container_set'
+        )
         extra_kwargs = {
             'url': {'view_name': "shelves-api:shelf-detail"},
             # 'author': {'view_name': "shelves-api:user-detail"},

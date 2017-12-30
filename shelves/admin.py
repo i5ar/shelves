@@ -21,8 +21,16 @@ class CustomerAdmin(admin.ModelAdmin):
         "id",
         "code",
         "name",  # `name` previusly `user`
-        "get_author_username"
+        "get_author_username",
+        "get_binder_id",
     )
+
+    def get_binder_id(self, obj):
+        binder = Binder.objects.get(customer=obj)
+        if binder.id:
+            return "{}".format(binder.id)
+
+    get_binder_id.short_description = _("Binder id")
 
     def get_author_username(self, obj):
         return obj.author.username
@@ -79,13 +87,24 @@ class ShelfAdmin(admin.ModelAdmin):
         'desc',
         'view_size',
         'nums',
-        'get_author_username'
+        'get_author_username',
+        'get_binders_number',
     )
 
     def get_author_username(self, obj):
         return obj.author.username
 
     get_author_username.short_description = _('Author username')
+
+    # TODO: Make it nicer.
+    def get_binders_number(self, obj):
+        binders = Binder.objects.all()
+        binders_containers_ids = set([i.container.id for i in binders])
+        containers = Container.objects.filter(shelf=obj)
+        containers_ids = set([i.id for i in containers])
+        return list(binders_containers_ids & containers_ids)
+
+    get_binders_number.short_description = _('Binders number')
 
     def get_readonly_fields(self, request, obj=None):
         """Define readonly fields.
