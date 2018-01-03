@@ -1,18 +1,25 @@
 from django.contrib import admin
 from django.utils.text import slugify
 from django.utils.translation import ugettext as _
+from django.core.files.storage import default_storage
+from django.db import IntegrityError
+from django.core.exceptions import ValidationError
 
 from wagtail.contrib.modeladmin.options import (
     ModelAdmin,
     ModelAdminGroup,
-    modeladmin_register)
+    modeladmin_register,
+)
+
+import csv
 
 from .models import (
     Customer,
     Shelf,
     Container,
     Binder,
-    Upload)
+    Upload,
+)
 
 
 @admin.register(Customer)
@@ -41,10 +48,12 @@ class CustomerAdmin(admin.ModelAdmin):
     exclude = ('author',)
 
     def save_model(self, request, obj, form, change):
-        """Save ``author`` as current user."""
+        """Save ``author`` as request user."""
+
         if getattr(obj, 'author', None) is None:
             obj.author = request.user
-        obj.save()
+
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(Shelf)
@@ -180,6 +189,64 @@ class BinderAdmin(admin.ModelAdmin):
 @admin.register(Upload)
 class UploadAdmin(admin.ModelAdmin):
     list_display = ("csv_file", )
+
+
+    def save_model(self, request, obj, form, change):
+        """Create customers from a CSV file.
+
+        .. _Save model:
+            https://docs.djangoproject.com/en/2.0/ref/contrib/admin/#django.contrib.admin.ModelAdmin.save_model
+
+        """
+        super().save_model(request, obj, form, change)
+
+        # Import CSV data
+        # http://stackoverflow.com/questions/2459979/
+        with open(default_storage.path(obj.csv_file)) as f:
+            has_header = csv.Sniffer().has_header(f.read(1024))
+            f.seek(0)
+            if has_header:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    try:
+                        cust, created_cust = Customer.objects.get_or_create(
+                            name=row['name'],
+                            code=row['code'],
+                            author=request.user
+                        )
+                    except IntegrityError as e:
+                        """
+                        An integrity error may happen if two customers have the
+                        same code.
+                        """
+                        # print('{0!r}'.format(e))
+                        raise ValidationError(e, code='integrity')
+                    except KeyError as e:
+                        """
+                        Key error may happen if CSV header is divergent
+                        from model fields
+                        """
+                        try:
+                            """
+                            Pretend internationalized field name match the
+                            CSV header
+                            """
+                            cust, created = Customer.objects.get_or_create(
+                                name=row[_('name')],
+                                code=row[_('code')],
+                                author=request.user
+                            )
+                        except:
+                            raise ValidationError(
+                                'Is the field {} present in the CSV file '
+                                'header?'.format(e),
+                                code='key')
+
+            else:
+                raise ValidationError(
+                    _('The CSV file require a proper header in order to spot '
+                        'the corresponding model fields.'),
+                    code='invalid')
 
 
 class CustomerWagtailAdmin(ModelAdmin):
