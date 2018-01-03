@@ -1,20 +1,20 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
-from django.urls import reverse, resolve
+# from django.urls import reverse, resolve
 
-from requests.auth import HTTPBasicAuth
+# from requests.auth import HTTPBasicAuth
 
-from rest_framework import status
-from rest_framework.test import (
-    force_authenticate,
-    RequestsClient,
-    APITestCase,
-    APIRequestFactory,
-    APIClient
-)
+# from rest_framework import status
+# from rest_framework.test import (
+#     force_authenticate,
+#     RequestsClient,
+#     APITestCase,
+#     APIRequestFactory,
+#     APIClient
+# )
 
 from .models import Customer
-from .api.serializers import CustomerBinderSerializer, BinderSerializer
+# from .api.serializers import CustomerBinderSerializer, BinderSerializer
 
 
 class CustomerTestCase(TestCase):

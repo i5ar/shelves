@@ -1,14 +1,11 @@
+# import json
+
 from django.db import models
-from django.db import IntegrityError
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
-from django.core.files.storage import default_storage
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth.models import User
-
-import json
-import csv
+# from django.contrib.auth.models import User
 
 
 class Customer(models.Model):
@@ -31,7 +28,7 @@ class Customer(models.Model):
         help_text=_(
             "The customer code must not be confused with the customer id "
             "or the user id!"))
-
+    note = models.TextField(_('Note'), max_length=128, blank=True)
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
@@ -44,6 +41,7 @@ class Customer(models.Model):
         verbose_name_plural = _('Customers')
 
 
+'''
 class BinAmbiguous(models.Model):
     coordinate = models.CharField(
         _('Coordinate'), unique=True, max_length=64,
@@ -57,7 +55,7 @@ class BinAmbiguous(models.Model):
         return json.loads(self.coordinate)
 
     def clean(self):
-        '''Validate coordinate field'''
+        """Validate coordinate field."""
         try:
             json.loads(self.coordinate)
         except ValueError as e:
@@ -70,6 +68,7 @@ class BinAmbiguous(models.Model):
 
     def __str__(self):
         return '{}'.format(self.coordinate)
+'''
 
 
 class Shelf(models.Model):
@@ -152,6 +151,12 @@ class Shelf(models.Model):
         verbose_name_plural = _('Shelves')
 
 
+class ContainerManager(models.Manager):
+    """HACK: Reverse the order for the chart."""
+    def get_queryset(self):
+        return super().get_queryset().order_by('-id')
+
+
 class Container(models.Model):
     """Shelf units."""
 
@@ -159,6 +164,8 @@ class Container(models.Model):
     col = models.IntegerField(_('Column'), blank=True, null=True)
     row = models.IntegerField(_('Row'), blank=True, null=True)
     # jsoncoord = models.CharField(_('Coordinate'), max_length=64, blank=True)
+
+    # objects = ContainerManager()
 
     def __str__(self):
         return '{}'.format(self.id)

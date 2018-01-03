@@ -16,6 +16,7 @@ from django.utils.translation import ugettext_lazy as _
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import datetime
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_DIR = os.path.dirname(PROJECT_DIR)
@@ -201,10 +202,11 @@ REST_FRAMEWORK = {
 
 
 # NOTE: django-rest-framework-jwt
-# Allow cookie based authentication
-# JWT_AUTH = {
-#     'JWT_AUTH_COOKIE': 'token',
-# }
+JWT_AUTH = {
+    # Allow cookie based authentication
+    # 'JWT_AUTH_COOKIE': 'token',
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3600),
+}
 
 
 # NOTE: django-cors-headers

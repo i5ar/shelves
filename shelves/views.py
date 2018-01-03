@@ -1,21 +1,15 @@
 import operator
 from functools import reduce
 
+from django.db.models import Q
 from django.shortcuts import render
-from django.core.exceptions import ValidationError
-from django.utils.translation import ugettext as _
 from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
-from django.db.models import Q
+# from django.core.exceptions import ValidationError
+# from django.utils.translation import ugettext as _
 
 from .forms import UploadForm
 from .models import Customer, Shelf, Binder
-
-'''
-import csv
-import codecs  # Python 2
-from io import TextIOWrapper  # Python 3
-'''
 
 
 def import_data(request):
@@ -24,36 +18,39 @@ def import_data(request):
         if form.is_valid():
 
             '''
-            Moved directly to Upload model so we just need to save the form
+            import csv
+            import codecs  # Python 2
+            from io import TextIOWrapper  # Python 3
+
 
             csv_data = request.FILES['csv_file']
             f = TextIOWrapper(request.FILES['csv_file'].file, encoding='utf-8',
-                errors='replace') # Python 3
+                errors='replace')  # Python 3
 
             # dialect = csv.Sniffer().sniff(
-                codecs.EncodedFile(csv_data, "utf-8").read(1024)) # Python 2
-            dialect = csv.Sniffer().sniff(f.read(1024)) # Python 3
+                codecs.EncodedFile(csv_data, "utf-8").read(1024))  # Python 2
+            dialect = csv.Sniffer().sniff(f.read(1024))  # Python 3
 
             csv_data.open()
 
             # has_header = csv.Sniffer().has_header(codecs.EncodedFile(
-                csv_data, "utf-8").read(1024)) # Python 2
-            has_header = csv.Sniffer().has_header(f.read(1024)) # Python 3
+                csv_data, "utf-8").read(1024))  # Python 2
+            has_header = csv.Sniffer().has_header(f.read(1024))  # Python 3
 
-            # csv_data.seek(0) # Python 2
-            f.seek(0) # Python 3
+            # csv_data.seek(0)  # Python 2
+            f.seek(0)  # Python 3
 
             if has_header:
 
                 # reader = csv.DictReader(
                     codecs.EncodedFile(csv_data, "utf-8"),
                     delimiter=',',
-                    dialect=dialect) # Python 2
+                    dialect=dialect)  # Python 2
 
                 reader = csv.DictReader(
                     f,
                     delimiter=',',
-                    dialect=dialect) # Python 3
+                    dialect=dialect)  # Python 3
 
                 # NOTE: We don't need to skip the header if we use DictReader()
                 # next(reader)

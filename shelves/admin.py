@@ -1,5 +1,6 @@
+import csv
+
 from django.contrib import admin
-from django.utils.text import slugify
 from django.utils.translation import ugettext as _
 from django.core.files.storage import default_storage
 from django.db import IntegrityError
@@ -8,10 +9,8 @@ from django.core.exceptions import ValidationError
 from wagtail.contrib.modeladmin.options import (
     ModelAdmin,
     ModelAdminGroup,
-    modeladmin_register,
+    modeladmin_register
 )
-
-import csv
 
 from .models import (
     Customer,
@@ -190,7 +189,6 @@ class BinderAdmin(admin.ModelAdmin):
 class UploadAdmin(admin.ModelAdmin):
     list_display = ("csv_file", )
 
-
     def save_model(self, request, obj, form, change):
         """Create customers from a CSV file.
 
@@ -236,7 +234,7 @@ class UploadAdmin(admin.ModelAdmin):
                                 code=row[_('code')],
                                 author=request.user
                             )
-                        except:
+                        except KeyError as e:
                             raise ValidationError(
                                 'Is the field {} present in the CSV file '
                                 'header?'.format(e),
