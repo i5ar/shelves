@@ -185,10 +185,8 @@ BASE_URL = 'http://example.com'
 
 # NOTE: django-rest-framework and django-rest-framework-jwt
 REST_FRAMEWORK = {
-    # Use Django's standard `django.contrib.auth` permissions,
-    # or allow read-only access for unauthenticated users.
+    # Default permission may be overridden by development settings
     'DEFAULT_PERMISSION_CLASSES': [
-        # 'rest_framework.permissions.AllowAny'
         'rest_framework.permissions.IsAuthenticated'
     ],
     # http://getblimp.github.io/django-rest-framework-jwt/

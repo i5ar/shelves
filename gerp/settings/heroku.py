@@ -35,6 +35,8 @@ MIDDLEWARE = [
 '''
 
 DEBUG = False
+# NOTE: The request user id for debugging.
+DEBUG_USER_ID = 0
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '@s=s&gg*zc!-81jz1ae05g+20cme*^yo2ovnyk+7*h@_fz'  # os.environ['']

@@ -3,6 +3,8 @@ from __future__ import absolute_import, unicode_literals
 from .base import *
 
 DEBUG = False
+# NOTE: The request user id for debugging.
+DEBUG_USER_ID = 0
 
 
 if 'RDS_DB_NAME' in os.environ:

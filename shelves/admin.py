@@ -24,12 +24,13 @@ from .models import (
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
+        "uuid",
         "code",
-        "name",  # `name` previusly `user`
+        "name",  # `name` previously `user`
         "get_binder_id",
         "get_author_username",
     )
+    prepopulated_fields = {"code": ("name",)}
 
     def get_binder_id(self, obj):
         binder = Binder.objects.get(customer=obj)
@@ -43,14 +44,26 @@ class CustomerAdmin(admin.ModelAdmin):
 
     get_author_username.short_description = _('Author username')
 
+    # NOTE: Slug
+    # https://stackoverflow.com/questions/41228034/
+
     # NOTE: Exclude author from fields and save it as current user.
     exclude = ('author',)
+
+    def get_form(self, request, *args, **kwargs):
+        form = super().get_form(request, *args, **kwargs)
+        form.current_user = request.user
+        return form
 
     def save_model(self, request, obj, form, change):
         """Save ``author`` as request user."""
 
         if getattr(obj, 'author', None) is None:
             obj.author = request.user
+
+            # TODO: Validate unique together.
+            # queryset = Customer.objects.filter(code=obj.code).filter(
+            #     author=obj.author)
 
         super().save_model(request, obj, form, change)
 
@@ -207,7 +220,7 @@ class UploadAdmin(admin.ModelAdmin):
                 reader = csv.DictReader(f)
                 for row in reader:
                     try:
-                        cust, created_cust = Customer.objects.get_or_create(
+                        Customer.objects.create(
                             name=row['name'],
                             code=row['code'],
                             author=request.user
@@ -229,7 +242,7 @@ class UploadAdmin(admin.ModelAdmin):
                             Pretend internationalized field name match the
                             CSV header
                             """
-                            cust, created = Customer.objects.get_or_create(
+                            Customer.objects.create(
                                 name=row[_('name')],
                                 code=row[_('code')],
                                 author=request.user
@@ -242,17 +255,19 @@ class UploadAdmin(admin.ModelAdmin):
 
             else:
                 raise ValidationError(
-                    _('The CSV file require a proper header in order to spot '
-                        'the corresponding model fields.'),
-                    code='invalid')
+                    _(
+                        'The CSV file require a proper header in order '
+                        'to spot the corresponding model fields.'
+                    ), code='invalid'
+                )
 
 
 class CustomerWagtailAdmin(ModelAdmin):
     model = Customer
     # menu_label = _('Customer')
-    list_display = ('name', 'code')  # `name` previusly `user`
-    list_filter = ('name', 'code')  # `name` previusly `user`
-    search_fields = ('name', 'code')  # `name` previusly `user`
+    list_display = ('name', 'code')  # `name` previously `user`
+    list_filter = ('name', 'code')  # `name` previously `user`
+    search_fields = ('name', 'code')  # `name` previously `user`
     menu_icon = 'group'
 
 

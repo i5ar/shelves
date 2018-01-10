@@ -1,12 +1,14 @@
+import os
+import logging
+# from collections import OrderedDict
+
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.template.defaultfilters import slugify
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
-
-import os
-import logging
-from collections import OrderedDict
 
 from ..models import (
     Customer,
@@ -17,23 +19,27 @@ from ..models import (
 
 # NOTE: Logging configuration used by the debug window in `startsession.sh`.
 logging.basicConfig(
-    filename = os.path.join(settings.BASE_DIR, 'api.log'),
-    level = logging.DEBUG if settings.DEBUG else logging.WARNING,
-    format = "%(levelname)s %(asctime)s %(message)s",
-    filemode = "w"  # Run `tail` with `-vn +1` option to output all the rows
+    filename=os.path.join(settings.BASE_DIR, 'api.log'),
+    level=logging.DEBUG if settings.DEBUG else logging.WARNING,
+    format="%(levelname)s %(asctime)s %(message)s",
+    filemode="w"  # Run `tail` with `-vn +1` option to output all the rows
 )
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
 
-    # NOTE: Uncomment if User is also Customer
+    # NOTE: Remove comment if User is also Customer
     # customer = serializers.HyperlinkedRelatedField(
     #     view_name='shelves-api:customer-detail', read_only=True)
 
     class Meta:
         model = User
         # NOTE: Add `customer` field if User is also Customer
-        fields = ('url', 'id', 'username')  # previusly `customer`
+        fields = (
+            'url',
+            'id',
+            'username'
+        )  # previously `customer`
         extra_kwargs = {
             'url': {'view_name': "shelves-api:user-detail"},
         }
@@ -69,21 +75,34 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
         return instance
     '''
 
+    def validate(self, data):
+        """Validate unique together ``author`` and ``code`` fields."""
+        request_user_customers = Customer.objects.filter(
+            author=self.context['request'].user)
+        customers_code = map(lambda x: x.code, request_user_customers)
+        if data.get('code') in customers_code:
+            raise ValidationError(_('This field must be unique.'))
+        return data
+
     class Meta:
         model = Customer
         # NOTE: The author is created from the generic view.
         fields = (
             # 'author',
             'url',
-            'id',
-            'name',  # `name` previusly `user`
-            'code'
+            'uuid',
+            'name',  # `name` previously `user`
+            'code',
         )
         extra_kwargs = {
-            'url': {'view_name': "shelves-api:customer-detail"},
+            'url': {
+                'view_name': "shelves-api:customer-detail",
+                'lookup_field': "code"
+            },
             # 'author': {'view_name': "shelves-api:user-detail"},
             # 'user': {'view_name': "shelves-api:user-detail"},
         }
+
 
 '''
 # NOTE: HyperlinkedModelSerializer doesn't entirely support namespaces.
@@ -107,9 +126,8 @@ class BinderSerializer(serializers.HyperlinkedModelSerializer):
         """
 
         binders = Binder.objects.all()
-        customers_id = list(map(lambda x: x.customer.id, binders))
+        customers_id = map(lambda x: x.customer.id, binders)
         if data.get('customer').id in customers_id:
-            from django.core.exceptions import ValidationError
             raise ValidationError('This field must be unique.')
         return data
 
@@ -240,6 +258,7 @@ class BinderSerializer(serializers.ModelSerializer):
         )
 '''
 
+
 class BinderListSerializer(serializers.ModelSerializer):
 
     url = serializers.HyperlinkedIdentityField(
@@ -288,7 +307,12 @@ class ContainerSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Container
-        fields = ('url', 'id', 'binder_set', 'coords')
+        fields = (
+            'url',
+            'id',
+            'binder_set',
+            'coords'
+        )
         extra_kwargs = {
             'url': {'view_name': "shelves-api:container-detail"},
         }
@@ -321,12 +345,24 @@ class ShelfListSerializer(serializers.HyperlinkedModelSerializer):
         return Shelf.objects.create(**validated_data)
     '''
 
+    slug = serializers.SerializerMethodField()
+
+    def get_slug(self, obj):
+        return slugify(obj.name)
+
     class Meta:
         model = Shelf
         # NOTE: The author is created from the generic view.
         fields = (
             # 'author_username',
-            'url', 'id', 'name', 'cols', 'rows', 'nums', 'container_set'
+            'url',
+            'id',
+            'name',
+            'slug',
+            'cols',
+            'rows',
+            'nums',
+            'container_set'
         )
         extra_kwargs = {
             'url': {'view_name': "shelves-api:shelf-detail"},
@@ -337,11 +373,24 @@ class ShelfListSerializer(serializers.HyperlinkedModelSerializer):
 class ShelfDetailSerializer(serializers.HyperlinkedModelSerializer):
 
     container_set = ContainerSerializer(many=True, read_only=True)
-    # NOTE: Make dimensional fields read only
+    # NOTE: Make dimensional fields read only.
     cols = serializers.IntegerField(read_only=True)
     rows = serializers.IntegerField(read_only=True)
     nums = serializers.IntegerField(read_only=True)
+    # NOTE: Slug field for the router.
+    slug = serializers.SerializerMethodField()
+
+    def get_slug(self, obj):
+        return slugify(obj.name)
 
     class Meta:
         model = Shelf
-        fields = ('name', 'desc', 'cols', 'rows', 'nums', 'container_set')
+        fields = (
+            'name',
+            'slug',
+            'desc',
+            'cols',
+            'rows',
+            'nums',
+            'container_set'
+        )

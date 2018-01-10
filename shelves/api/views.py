@@ -3,6 +3,7 @@ from functools import reduce
 
 from django.contrib.auth.models import User
 from django.db.models import Q
+from django.conf import settings
 
 from rest_framework import generics, viewsets
 from rest_framework import permissions
@@ -47,21 +48,39 @@ def shelves_root(request, format=None):
 class CustomerList(generics.ListCreateAPIView):
     # queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
+    if settings.DEBUG_USER_ID:
+        permission_classes = (permissions.AllowAny,)
+    else:
+        permission_classes = (permissions.IsAuthenticated,)
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        if settings.DEBUG_USER_ID:
+            serializer.save(author=User.objects.get(id=settings.DEBUG_USER_ID))
+        else:
+            serializer.save(author=self.request.user)
 
     def get_queryset(self):
         """Filter the customers of the current user by the author."""
+        if settings.DEBUG_USER_ID:
+            return Customer.objects.filter(
+                author=User.objects.get(id=settings.DEBUG_USER_ID))
         return Customer.objects.filter(author=self.request.user)
 
 
 class CustomerDetail(generics.RetrieveUpdateDestroyAPIView):
     # queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
+    lookup_field = 'code'
+    if settings.DEBUG_USER_ID:
+        permission_classes = (permissions.AllowAny,)
+    else:
+        permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
         """Filter the customer of the current user by the author."""
+        if settings.DEBUG_USER_ID:
+            return Customer.objects.filter(
+                author=User.objects.get(id=settings.DEBUG_USER_ID))
         return Customer.objects.filter(author=self.request.user)
 
 
@@ -75,13 +94,22 @@ class ShelfList(generics.ListCreateAPIView):
 
     # queryset = Shelf.objects.all()
     serializer_class = ShelfListSerializer
-    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    if settings.DEBUG_USER_ID:
+        permission_classes = (permissions.AllowAny,)
+    else:
+        permission_classes = (permissions.IsAuthenticated,)
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        if settings.DEBUG_USER_ID:
+            serializer.save(author=User.objects.get(id=settings.DEBUG_USER_ID))
+        else:
+            serializer.save(author=self.request.user)
 
     def get_queryset(self):
         """Filter the shelves of the current user by the author."""
+        if settings.DEBUG_USER_ID:
+            return Shelf.objects.filter(author=User.objects.get(
+                id=settings.DEBUG_USER_ID))
         return Shelf.objects.filter(author=self.request.user)
 
 
@@ -95,35 +123,53 @@ class ShelfDetail(generics.RetrieveUpdateDestroyAPIView):
 
     # queryset = Shelf.objects.all()
     serializer_class = ShelfDetailSerializer
-    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    if settings.DEBUG_USER_ID:
+        permission_classes = (permissions.AllowAny,)
+    else:
+        permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
         """Filter the shelf of the current user by the author."""
+        if settings.DEBUG_USER_ID:
+            return Shelf.objects.filter(author=User.objects.get(
+                id=settings.DEBUG_USER_ID))
         return Shelf.objects.filter(author=self.request.user)
 
 
 class ContainerList(generics.ListAPIView):
     # queryset = Container.objects.all()
     serializer_class = ContainerSerializer
-    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    if settings.DEBUG_USER_ID:
+        permission_classes = (permissions.AllowAny,)
+    else:
+        permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
         """
         Filter the containers of the current user by the author of the shelf.
 
         """
+        if settings.DEBUG_USER_ID:
+            return Container.objects.filter(
+                shelf__author=User.objects.get(id=settings.DEBUG_USER_ID))
         return Container.objects.filter(shelf__author=self.request.user)
 
 
 class ContainerDetail(generics.RetrieveAPIView):
     # queryset = Container.objects.all()
     serializer_class = ContainerSerializer
-    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    if settings.DEBUG_USER_ID:
+        permission_classes = (permissions.AllowAny,)
+    else:
+        permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
         """Filter the container of the current user by the author of the
         shelf.
         """
+        if settings.DEBUG_USER_ID:
+            return Container.objects.filter(
+                shelf__author=User.objects.get(id=settings.DEBUG_USER_ID))
         return Container.objects.filter(shelf__author=self.request.user)
 
 
@@ -132,7 +178,10 @@ class BinderViewSet(viewsets.ModelViewSet):
 
     # queryset = Binder.objects.all()
     # serializer_class = BinderSerializer
-    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    if settings.DEBUG_USER_ID:
+        permission_classes = (permissions.AllowAny,)
+    else:
+        permission_classes = (permissions.IsAuthenticated,)
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -153,7 +202,10 @@ class BinderViewSet(viewsets.ModelViewSet):
         # print(self.action)
         # print('\033[0m')
 
-        user = self.request.user
+        if settings.DEBUG_USER_ID:
+            user = User.objects.get(id=settings.DEBUG_USER_ID)
+        else:
+            user = self.request.user
         queryset = Binder.objects.filter(container__shelf__author=user)
 
         if self.action == 'list':

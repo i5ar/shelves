@@ -1,4 +1,5 @@
 # import json
+import uuid
 
 from django.db import models
 from django.conf import settings
@@ -9,36 +10,43 @@ from django.utils.translation import ugettext_lazy as _
 
 
 class Customer(models.Model):
+    # TODO: Remove if the router uses the code field instead of the uuid field.
+    uuid = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False
+    )
     # user = models.OneToOneField(User, on_delete=models.CASCADE)
     name = models.CharField(_('Name'), max_length=32, blank=True)
 
     # @property
     # def name(self):
     #     """Avoid breaking change.
-    #     If the previus model had a `name` field the property decorator will
+    #     If the previous model had a `name` field the property decorator will
     #     prevent errors if a `customer.name` is used somewhere else.
     #     """
     #     return self.user.username
 
-    # TODO: If code empty generate a username from the name if there is a name.
-    code = models.CharField(
+    # TODO: If code empty generate a slug from the name if there is a name.
+    code = models.SlugField(
         _('Code'),
-        unique=True,
         max_length=16,
         help_text=_(
             "The customer code must not be confused with the customer id "
-            "or the user id!"))
+            "or the user id!"
+        )
+    )
     note = models.TextField(_('Note'), max_length=128, blank=True)
     author = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
+    )
 
     def __str__(self):
         # return self.user.username
-        return '{}'.format(self.id)
+        return '{}'.format(self.uuid)
 
     class Meta:
         verbose_name = _('Customer')
         verbose_name_plural = _('Customers')
+        unique_together = (("code", "author"),)
 
 
 '''
@@ -72,11 +80,11 @@ class BinAmbiguous(models.Model):
 
 
 class Shelf(models.Model):
-    """Regular or irregular forniture."""
+    """Regular or irregular furniture."""
     name = models.CharField(
         _('Name'), max_length=64,
         help_text=_('A name for the shelf.'), unique=True)
-    desc = models.TextField(_('Description'),  blank=True)
+    desc = models.TextField(_('Description'), blank=True)
     cols = models.PositiveIntegerField(
         _('Columns'), validators=[MinValueValidator(1)],
         help_text=_('The number of cols'), blank=True, null=True)

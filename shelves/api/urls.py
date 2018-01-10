@@ -10,7 +10,7 @@ urlpatterns = [
         name="user-detail"),
 
     url(r'^customers/$', views.CustomerList.as_view(), name="customer-list"),
-    url(r'^customers/(?P<pk>[0-9]+)/$', views.CustomerDetail.as_view(),
+    url(r'^customers/(?P<code>[-\w]+)/$', views.CustomerDetail.as_view(),
         name="customer-detail"),
 
     url(r'^binders/$', views.BinderViewSet.as_view({
