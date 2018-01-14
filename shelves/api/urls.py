@@ -30,6 +30,6 @@ urlpatterns = [
 
     url(r'^shelves/$', views.ShelfList.as_view(),
         name="shelf-list"),
-    url(r'^shelves/(?P<pk>[0-9]+)/$', views.ShelfDetail.as_view(),
+    url(r'^shelves/(?P<slug>[-\w]+)/$', views.ShelfDetail.as_view(),
         name="shelf-detail"),
 ]

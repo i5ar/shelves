@@ -83,7 +83,8 @@ class Shelf(models.Model):
     """Regular or irregular furniture."""
     name = models.CharField(
         _('Name'), max_length=64,
-        help_text=_('A name for the shelf.'), unique=True)
+        help_text=_('A name for the shelf.'))
+    slug = models.SlugField(max_length=16,)
     desc = models.TextField(_('Description'), blank=True)
     cols = models.PositiveIntegerField(
         _('Columns'), validators=[MinValueValidator(1)],
@@ -157,6 +158,7 @@ class Shelf(models.Model):
     class Meta:
         verbose_name = _('Shelf')
         verbose_name_plural = _('Shelves')
+        unique_together = (("slug", "author"),)
 
 
 class ContainerManager(models.Manager):

@@ -73,7 +73,7 @@ class ShelfAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('name', 'desc',)
+            'fields': ('name', 'desc', 'slug')
         }),
         ('Size options', {
             'classes': ('wide',),
@@ -88,11 +88,17 @@ class ShelfAdmin(admin.ModelAdmin):
             'fields': ('nums', ),
         }),
     )
+    prepopulated_fields = {"slug": ("name",)}
 
     def save_model(self, request, obj, form, change):
         """Save author as current user."""
         if getattr(obj, 'author', None) is None:
             obj.author = request.user
+
+            # TODO: Validate unique together.
+            # queryset = Customer.objects.filter(code=obj.code).filter(
+            #     author=obj.author)
+
         obj.save()
 
     def view_size(self, obj):

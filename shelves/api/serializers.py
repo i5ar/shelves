@@ -81,7 +81,7 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
             author=self.context['request'].user)
         customers_code = map(lambda x: x.code, request_user_customers)
         if data.get('code') in customers_code:
-            raise ValidationError(_('This field must be unique.'))
+            raise ValidationError(_('Customer with this Code already exists.'))
         return data
 
     class Meta:
@@ -328,6 +328,15 @@ class ShelfListSerializer(serializers.HyperlinkedModelSerializer):
     # container_set = serializers.StringRelatedField(many=True)
     container_set = ContainerSerializer(many=True, read_only=True)
 
+    def validate(self, data):
+        """Validate unique together ``author`` and ``slug`` fields."""
+        request_user_shelves = Shelf.objects.filter(
+            author=self.context['request'].user)
+        shelves_slug = map(lambda x: x.slug, request_user_shelves)
+        if data.get('slug') in shelves_slug:
+            raise ValidationError(_('Shelf with this Slug already exists.'))
+        return data
+
     '''
     # NOTE: Validate author as a CharField (username).
     # author_username = serializers.CharField(source='author')
@@ -345,11 +354,6 @@ class ShelfListSerializer(serializers.HyperlinkedModelSerializer):
         return Shelf.objects.create(**validated_data)
     '''
 
-    slug = serializers.SerializerMethodField()
-
-    def get_slug(self, obj):
-        return slugify(obj.name)
-
     class Meta:
         model = Shelf
         # NOTE: The author is created from the generic view.
@@ -365,23 +369,30 @@ class ShelfListSerializer(serializers.HyperlinkedModelSerializer):
             'container_set'
         )
         extra_kwargs = {
-            'url': {'view_name': "shelves-api:shelf-detail"},
+            'url': {
+                'view_name': "shelves-api:shelf-detail",
+                'lookup_field': "slug"
+            }
             # 'author': {'view_name': "shelves-api:user-detail"},
         }
 
 
-class ShelfDetailSerializer(serializers.HyperlinkedModelSerializer):
+class ShelfDetailSerializer(serializers.ModelSerializer):
 
     container_set = ContainerSerializer(many=True, read_only=True)
     # NOTE: Make dimensional fields read only.
     cols = serializers.IntegerField(read_only=True)
     rows = serializers.IntegerField(read_only=True)
     nums = serializers.IntegerField(read_only=True)
-    # NOTE: Slug field for the router.
-    slug = serializers.SerializerMethodField()
 
-    def get_slug(self, obj):
-        return slugify(obj.name)
+    def validate(self, data):
+        """Validate unique together ``author`` and ``slug`` fields."""
+        request_user_shelves = Shelf.objects.filter(
+            author=self.context['request'].user)
+        shelves_slug = map(lambda x: x.slug, request_user_shelves)
+        if data.get('slug') in shelves_slug:
+            raise ValidationError(_('Shelf with this Slug already exists.'))
+        return data
 
     class Meta:
         model = Shelf
