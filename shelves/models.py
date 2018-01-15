@@ -25,7 +25,6 @@ class Customer(models.Model):
     #     """
     #     return self.user.username
 
-    # TODO: If code empty generate a slug from the name if there is a name.
     code = models.SlugField(
         _('Code'),
         max_length=16,
@@ -84,7 +83,7 @@ class Shelf(models.Model):
     name = models.CharField(
         _('Name'), max_length=64,
         help_text=_('A name for the shelf.'))
-    slug = models.SlugField(max_length=16,)
+    code = models.SlugField(max_length=16,)
     desc = models.TextField(_('Description'), blank=True)
     cols = models.PositiveIntegerField(
         _('Columns'), validators=[MinValueValidator(1)],
@@ -121,22 +120,13 @@ class Shelf(models.Model):
             raise ValidationError(_("Too much containers."))
 
     def save(self, *args, **kwargs):
-        """Create and update containers."""
-        if self.id:  # Update
+        """Update or create containers."""
+        if self.id:
+            # NOTE: Update containers.
+            super(Shelf, self).save(*args, **kwargs)
+        else:
+            # NOTE: Create containers.
             if self.cols and self.rows:
-                self.name = self.name
-                self.desc = self.desc
-                self.nums = self.cols*self.rows
-                super(Shelf, self).save(*args, **kwargs)
-            elif self.nums:
-                self.name = self.name
-                self.desc = self.desc
-                super(Shelf, self).save(*args, **kwargs)
-        else:  # Create
-            if self.cols and self.rows:
-                # Create containers and store them in a list for later and save
-                self.name = self.name
-                self.desc = self.desc
                 self.nums = self.cols*self.rows
                 super(Shelf, self).save(*args, **kwargs)
                 for col in range(self.cols):
@@ -145,10 +135,8 @@ class Shelf(models.Model):
                             shelf=self, col=col+1, row=row+1)
                         container.save()
             elif self.nums:
-                self.name = self.name
-                self.desc = self.desc
                 super(Shelf, self).save(*args, **kwargs)
-                for num in range(self.nums):
+                for __ in range(self.nums):
                     container = Container(shelf=self)
                     container.save()
 
@@ -158,7 +146,7 @@ class Shelf(models.Model):
     class Meta:
         verbose_name = _('Shelf')
         verbose_name_plural = _('Shelves')
-        unique_together = (("slug", "author"),)
+        unique_together = (("code", "author"),)
 
 
 class ContainerManager(models.Manager):

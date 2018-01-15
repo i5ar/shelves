@@ -6,6 +6,8 @@ from django.core.files.storage import default_storage
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 
+from django import forms
+
 from wagtail.contrib.modeladmin.options import (
     ModelAdmin,
     ModelAdminGroup,
@@ -44,27 +46,22 @@ class CustomerAdmin(admin.ModelAdmin):
 
     get_author_username.short_description = _('Author username')
 
-    # NOTE: Slug
-    # https://stackoverflow.com/questions/41228034/
-
-    # NOTE: Exclude author from fields and save it as current user.
-    exclude = ('author',)
-
+    # NOTE: Hide author selection and save author as current user.
     def get_form(self, request, *args, **kwargs):
+        """Hide ``author`` selection default to request user."""
         form = super().get_form(request, *args, **kwargs)
-        form.current_user = request.user
+        form.base_fields['author'].initial = request.user
+        form.base_fields['author'].widget = forms.HiddenInput()
         return form
 
     def save_model(self, request, obj, form, change):
-        """Save ``author`` as request user."""
+        """Save ``author`` field as request user.
 
+        The ``author`` selection is default to request user
+        but the form can be forced.
+        """
         if getattr(obj, 'author', None) is None:
             obj.author = request.user
-
-            # TODO: Validate unique together.
-            # queryset = Customer.objects.filter(code=obj.code).filter(
-            #     author=obj.author)
-
         super().save_model(request, obj, form, change)
 
 
@@ -73,7 +70,7 @@ class ShelfAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('name', 'desc', 'slug')
+            'fields': ('name', 'code', 'desc', 'author')
         }),
         ('Size options', {
             'classes': ('wide',),
@@ -88,18 +85,7 @@ class ShelfAdmin(admin.ModelAdmin):
             'fields': ('nums', ),
         }),
     )
-    prepopulated_fields = {"slug": ("name",)}
-
-    def save_model(self, request, obj, form, change):
-        """Save author as current user."""
-        if getattr(obj, 'author', None) is None:
-            obj.author = request.user
-
-            # TODO: Validate unique together.
-            # queryset = Customer.objects.filter(code=obj.code).filter(
-            #     author=obj.author)
-
-        obj.save()
+    prepopulated_fields = {"code": ("name",)}
 
     def view_size(self, obj):
         if obj.cols and obj.rows:
@@ -110,6 +96,7 @@ class ShelfAdmin(admin.ModelAdmin):
 
     list_display = (
         'id',
+        'code',
         'name',
         'desc',
         'view_size',
@@ -140,6 +127,24 @@ class ShelfAdmin(admin.ModelAdmin):
         if obj is None:
             return []
         return ['cols', 'rows', 'nums']
+
+    # NOTE: Hide author selection and save author as current user.
+    def get_form(self, request, *args, **kwargs):
+        """Hide ``author`` selection default to request user."""
+        form = super().get_form(request, *args, **kwargs)
+        form.base_fields['author'].initial = request.user
+        form.base_fields['author'].widget = forms.HiddenInput()
+        return form
+
+    def save_model(self, request, obj, form, change):
+        """Save ``author`` field as request user.
+
+        The ``author`` selection is default to request user
+        but the form can be forced.
+        """
+        if getattr(obj, 'author', None) is None:
+            obj.author = request.user
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(Container)

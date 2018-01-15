@@ -121,7 +121,7 @@ class ShelfDetail(generics.RetrieveUpdateDestroyAPIView):
     - ``deleteShelf()``
     """
 
-    lookup_field = 'slug'
+    lookup_field = 'code'
     # queryset = Shelf.objects.all()
     serializer_class = ShelfDetailSerializer
     if settings.DEBUG_USER_ID:

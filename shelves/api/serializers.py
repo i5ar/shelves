@@ -5,7 +5,6 @@ import logging
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -77,10 +76,10 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
 
     def validate(self, data):
         """Validate unique together ``author`` and ``code`` fields."""
-        request_user_customers = Customer.objects.filter(
-            author=self.context['request'].user)
-        customers_code = map(lambda x: x.code, request_user_customers)
-        if data.get('code') in customers_code:
+        custs = Customer.objects.filter(author=self.context['request'].user)
+        # print('{:#^79}'.format(' Get all author instances but current '))
+        instances = filter(lambda x: x != self.instance, custs)
+        if data.get('code') in map(lambda x: x.code, instances):
             raise ValidationError(_('Customer with this Code already exists.'))
         return data
 
@@ -325,16 +324,11 @@ class ShelfListSerializer(serializers.HyperlinkedModelSerializer):
     http://www.django-rest-framework.org/api-guide/relations/#writable-nested-serializers
     """
 
-    # container_set = serializers.StringRelatedField(many=True)
-    container_set = ContainerSerializer(many=True, read_only=True)
-
     def validate(self, data):
-        """Validate unique together ``author`` and ``slug`` fields."""
-        request_user_shelves = Shelf.objects.filter(
-            author=self.context['request'].user)
-        shelves_slug = map(lambda x: x.slug, request_user_shelves)
-        if data.get('slug') in shelves_slug:
-            raise ValidationError(_('Shelf with this Slug already exists.'))
+        """Validate unique together ``author`` and ``code`` fields."""
+        shelves = Shelf.objects.filter(author=self.context['request'].user)
+        if data.get('code') in map(lambda x: x.code, shelves):
+            raise ValidationError(_('Shelf with this Code already exists.'))
         return data
 
     '''
@@ -362,16 +356,15 @@ class ShelfListSerializer(serializers.HyperlinkedModelSerializer):
             'url',
             'id',
             'name',
-            'slug',
+            'code',
             'cols',
             'rows',
-            'nums',
-            'container_set'
+            'nums'
         )
         extra_kwargs = {
             'url': {
                 'view_name': "shelves-api:shelf-detail",
-                'lookup_field': "slug"
+                'lookup_field': "code"
             }
             # 'author': {'view_name': "shelves-api:user-detail"},
         }
@@ -379,6 +372,7 @@ class ShelfListSerializer(serializers.HyperlinkedModelSerializer):
 
 class ShelfDetailSerializer(serializers.ModelSerializer):
 
+    # container_set = serializers.StringRelatedField(many=True)
     container_set = ContainerSerializer(many=True, read_only=True)
     # NOTE: Make dimensional fields read only.
     cols = serializers.IntegerField(read_only=True)
@@ -386,19 +380,18 @@ class ShelfDetailSerializer(serializers.ModelSerializer):
     nums = serializers.IntegerField(read_only=True)
 
     def validate(self, data):
-        """Validate unique together ``author`` and ``slug`` fields."""
-        request_user_shelves = Shelf.objects.filter(
-            author=self.context['request'].user)
-        shelves_slug = map(lambda x: x.slug, request_user_shelves)
-        if data.get('slug') in shelves_slug:
-            raise ValidationError(_('Shelf with this Slug already exists.'))
+        """Validate unique together ``author`` and ``code`` fields."""
+        shelves = Shelf.objects.filter(author=self.context['request'].user)
+        instances = filter(lambda x: x != self.instance, shelves)
+        if data.get('code') in map(lambda x: x.code, instances):
+            raise ValidationError(_('Shelf with this Code already exists.'))
         return data
 
     class Meta:
         model = Shelf
         fields = (
             'name',
-            'slug',
+            'code',
             'desc',
             'cols',
             'rows',
