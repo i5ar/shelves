@@ -5,7 +5,7 @@ from .base import *
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 # NOTE: The request user id for debugging.
-DEBUG_USER_ID = 0
+DEBUG_USER_ID = 1
 
 
 # NOTE: django-rest-framework

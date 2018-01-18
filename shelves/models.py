@@ -40,7 +40,7 @@ class Customer(models.Model):
 
     def __str__(self):
         # return self.user.username
-        return '{}'.format(self.uuid)
+        return '{}'.format(self.code)
 
     class Meta:
         verbose_name = _('Customer')
@@ -141,7 +141,7 @@ class Shelf(models.Model):
                     container.save()
 
     def __str__(self):
-        return '{}'.format(self.id)
+        return '{}'.format(self.code)
 
     class Meta:
         verbose_name = _('Shelf')
