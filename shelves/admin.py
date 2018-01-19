@@ -47,22 +47,27 @@ class CustomerAdmin(admin.ModelAdmin):
     get_author_username.short_description = _('Author username')
 
     # NOTE: Hide author selection and save author as current user.
-    def get_form(self, request, *args, **kwargs):
-        """Hide ``author`` selection default to request user."""
-        form = super().get_form(request, *args, **kwargs)
-        form.base_fields['author'].initial = request.user
-        form.base_fields['author'].widget = forms.HiddenInput()
+    def get_readonly_fields(self, request, obj=None):
+        """Make ``author`` field readonly for regular users on update."""
+        return ['author'] if obj and not request.user.is_superuser else []
+
+    def get_form(self, request, obj=None, **kwargs):
+        """Hide ``author`` selection default to request user on create."""
+        form = super().get_form(request, obj, **kwargs)
+        if not obj:
+            form.base_fields['author'].initial = request.user
+        if not obj and not request.user.is_superuser:
+            form.base_fields['author'].widget = forms.HiddenInput()
         return form
 
     def save_model(self, request, obj, form, change):
-        """Save ``author`` field as request user.
-
-        The ``author`` selection is default to request user
-        but the form can be forced.
-        """
-        if getattr(obj, 'author', None) is None:
-            obj.author = request.user
+        """Save ``author`` field as request user to prevent hack on create."""
+        if getattr(obj, 'author') != request.user and not change:
+            if not request.user.is_superuser:
+                obj.author = request.user
         super().save_model(request, obj, form, change)
+
+    list_filter = ('author',)
 
 
 @admin.register(Shelf)
@@ -119,31 +124,29 @@ class ShelfAdmin(admin.ModelAdmin):
     get_author_username.short_description = _('Author username')
 
     def get_readonly_fields(self, request, obj=None):
-        """Define readonly fields.
-
-        Make dimensional fields readonly so the shelf cannot change size once
-        it is defined.
-        """
-        if obj is None:
+        """Make ``author`` field and dimensional fields readonly."""
+        if obj and request.user.is_superuser:
+            return ['cols', 'rows', 'nums']
+        elif obj and not request.user.is_superuser:
+            return ['cols', 'rows', 'nums', 'author']
+        else:
             return []
-        return ['cols', 'rows', 'nums']
 
     # NOTE: Hide author selection and save author as current user.
-    def get_form(self, request, *args, **kwargs):
-        """Hide ``author`` selection default to request user."""
-        form = super().get_form(request, *args, **kwargs)
-        form.base_fields['author'].initial = request.user
-        form.base_fields['author'].widget = forms.HiddenInput()
+    def get_form(self, request, obj=None, **kwargs):
+        """Hide ``author`` selection default to request user on create."""
+        form = super().get_form(request, obj, **kwargs)
+        if not obj:
+            form.base_fields['author'].initial = request.user
+        if not obj and not request.user.is_superuser:
+            form.base_fields['author'].widget = forms.HiddenInput()
         return form
 
     def save_model(self, request, obj, form, change):
-        """Save ``author`` field as request user.
-
-        The ``author`` selection is default to request user
-        but the form can be forced.
-        """
-        if getattr(obj, 'author', None) is None:
-            obj.author = request.user
+        """Save ``author`` field as request user to prevent hack on create."""
+        if getattr(obj, 'author') != request.user and not change:
+            if not request.user.is_superuser:
+                obj.author = request.user
         super().save_model(request, obj, form, change)
 
 
@@ -231,9 +234,10 @@ class UploadAdmin(admin.ModelAdmin):
                 reader = csv.DictReader(f)
                 for row in reader:
                     try:
-                        Customer.objects.create(
+                        Customer.objects.get_or_create(
                             name=row['name'],
                             code=row['code'],
+                            note=row['note'],
                             author=request.user
                         )
                     except IntegrityError as e:
@@ -253,22 +257,24 @@ class UploadAdmin(admin.ModelAdmin):
                             Pretend internationalized field name match the
                             CSV header
                             """
-                            Customer.objects.create(
+                            Customer.objects.get_or_create(
                                 name=row[_('name')],
                                 code=row[_('code')],
+                                note=row[_('note')],
                                 author=request.user
                             )
                         except KeyError as e:
                             raise ValidationError(
                                 'Is the field {} present in the CSV file '
                                 'header?'.format(e),
-                                code='key')
+                                code='key'
+                            )
 
             else:
                 raise ValidationError(
                     _(
-                        'The CSV file require a proper header in order '
-                        'to spot the corresponding model fields.'
+                        'The CSV file require a proper header in order.'
+                        'Be sure to provide an id field.'
                     ), code='invalid'
                 )
 

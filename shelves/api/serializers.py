@@ -92,6 +92,7 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
             'uuid',
             'name',  # `name` previously `user`
             'code',
+            'note'
         )
         extra_kwargs = {
             'url': {
