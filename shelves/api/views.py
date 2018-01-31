@@ -9,7 +9,12 @@ from rest_framework import generics, viewsets
 from rest_framework import permissions
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.reverse import reverse
+from rest_framework.parsers import (
+    FormParser,
+    MultiPartParser,
+)
 
 from .serializers import (
     UserSerializer,
@@ -19,6 +24,7 @@ from .serializers import (
     ContainerSerializer,
     BinderListSerializer,
     BinderCreateRetrieveUpdateDestroySerializer,
+    UploadSerializer,
 )
 
 from ..models import (
@@ -26,6 +32,7 @@ from ..models import (
     Shelf,
     Container,
     Binder,
+    Upload,
 )
 
 
@@ -42,6 +49,8 @@ def shelves_root(request, format=None):
             'shelves-api:container-list', request=request, format=format),
         'shelves': reverse(
             'shelves-api:shelf-list', request=request, format=format),
+        'uploads': reverse(
+            'shelves-api:upload-list', request=request, format=format)
     })
 
 
@@ -245,3 +254,27 @@ class UserDetail(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (permissions.IsAdminUser,)
+
+
+# Using ModelViewSet and Dropbox
+# https://stackoverflow.com/questions/37987188/
+# Using APIView
+# https://stackoverflow.com/questions/39887923/
+class UploadView(APIView):
+    """
+    NOTE: Use only `Authorization` header in Postman.
+
+    """
+    parser_classes = (MultiPartParser, FormParser)
+    serializer_class = UploadSerializer
+
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            my_file = Upload(**serializer.validated_data)
+            my_file.save()
+            # TODO: Read CSV.
+            # https://stackoverflow.com/questions/34832403/
+            return Response({'success': 'Imported successfully'})
+        else:
+            return Response(serializer.errors, status=400)

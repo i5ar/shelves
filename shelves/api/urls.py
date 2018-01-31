@@ -28,8 +28,9 @@ urlpatterns = [
     url(r'^containers/(?P<pk>[0-9]+)/$', views.ContainerDetail.as_view(),
         name="container-detail"),
 
-    url(r'^shelves/$', views.ShelfList.as_view(),
-        name="shelf-list"),
+    url(r'^shelves/$', views.ShelfList.as_view(), name="shelf-list"),
     url(r'^shelves/(?P<code>[-\w]+)/$', views.ShelfDetail.as_view(),
         name="shelf-detail"),
+
+    url(r'^uploads/$', views.UploadView.as_view(), name="upload-list")
 ]

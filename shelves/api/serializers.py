@@ -14,6 +14,7 @@ from ..models import (
     Container,
     Shelf,
     Binder,
+    Upload,
 )
 
 # NOTE: Logging configuration used by the debug window in `startsession.sh`.
@@ -398,4 +399,12 @@ class ShelfDetailSerializer(serializers.ModelSerializer):
             'rows',
             'nums',
             'container_set'
+        )
+
+
+class UploadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Upload
+        fields = (
+            'csv_file',
         )
