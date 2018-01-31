@@ -200,7 +200,21 @@ class Binder(models.Model):
         verbose_name_plural = _('Binders')
 
 
+class Attached(models.Model):
+    """Binder attachments."""
+    title = models.CharField(_('Title'), max_length=64)
+    binder = models.ForeignKey('Binder', on_delete=models.CASCADE)
+    file = models.FileField(upload_to='docs')
+
+    class Meta:
+        verbose_name = _('Attachment')
+        verbose_name_plural = _('Attachments')
+
+    def __str__(self):
+        return self.title
+
+
 class Upload(models.Model):
-    """Upload Customers"""
+    """Upload customers."""
     csv_file = models.FileField('File CSV', upload_to='docs')
     created = models.DateField(auto_now_add=True)

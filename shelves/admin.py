@@ -20,6 +20,7 @@ from .models import (
     Container,
     Binder,
     Upload,
+    Attached,
 )
 
 
@@ -168,6 +169,11 @@ class ContainerAdmin(admin.ModelAdmin):
         return False
 
 
+class AttachedInline(admin.TabularInline):
+    model = Attached
+    extra = 1
+
+
 @admin.register(Binder)
 class BinderAdmin(admin.ModelAdmin):
     # search_fields = ('title', 'customer__code', 'customer__user__username')
@@ -177,6 +183,8 @@ class BinderAdmin(admin.ModelAdmin):
         'customer__code',
         'customer__name',
     )
+
+    inlines = [AttachedInline]
 
     def get_customer_name(self, obj):
         if obj.customer:
