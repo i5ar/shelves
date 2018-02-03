@@ -37,7 +37,10 @@ wheels/
 
 # Static files
 media/
-
+fonts/
+js/
+css/
+locales/
 
 # Shell commands
 activate.bat
