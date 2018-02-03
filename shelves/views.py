@@ -3,6 +3,7 @@ from functools import reduce
 
 from django.db.models import Q
 from django.shortcuts import render
+from django.views.generic import TemplateView
 from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
 # from django.core.exceptions import ValidationError
@@ -133,3 +134,7 @@ class BinderListView(ListView):
 
 class BinderDetailView(DetailView):
     model = Binder
+
+
+class AureliaView(TemplateView):
+    template_name = "shelves/au/index.html"

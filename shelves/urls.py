@@ -1,5 +1,10 @@
 from django.conf.urls import url
-from .views import import_data, BinderListView, BinderDetailView
+from .views import (
+    import_data,
+    BinderListView,
+    BinderDetailView,
+    AureliaView,
+)
 
 
 urlpatterns = [
@@ -10,4 +15,6 @@ urlpatterns = [
         BinderDetailView.as_view(),
         name='binders-detail'
     ),
+    # The front-end
+    url(r'^au/', AureliaView.as_view(), name='aurelia'),
 ]
