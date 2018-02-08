@@ -21,7 +21,6 @@ from .serializers import (
     CustomerSerializer,
     ShelfListSerializer,
     ShelfDetailSerializer,
-    ContainerSerializer,
     BinderListSerializer,
     BinderCreateRetrieveUpdateDestroySerializer,
     UploadSerializer,
@@ -30,7 +29,6 @@ from .serializers import (
 from ..models import (
     Customer,
     Shelf,
-    Container,
     Binder,
     Upload,
 )
@@ -45,8 +43,6 @@ def shelves_root(request, format=None):
             'shelves-api:customer-list', request=request, format=format),
         'binders': reverse(
             'shelves-api:binder-list', request=request, format=format),
-        'containers': reverse(
-            'shelves-api:container-list', request=request, format=format),
         'shelves': reverse(
             'shelves-api:shelf-list', request=request, format=format),
         'uploads': reverse(
@@ -146,43 +142,6 @@ class ShelfDetail(generics.RetrieveUpdateDestroyAPIView):
         return Shelf.objects.filter(author=self.request.user)
 
 
-class ContainerList(generics.ListAPIView):
-    # queryset = Container.objects.all()
-    serializer_class = ContainerSerializer
-    if settings.DEBUG_USER_ID:
-        permission_classes = (permissions.AllowAny,)
-    else:
-        permission_classes = (permissions.IsAuthenticated,)
-
-    def get_queryset(self):
-        """
-        Filter the containers of the current user by the author of the shelf.
-
-        """
-        if settings.DEBUG_USER_ID:
-            return Container.objects.filter(
-                shelf__author=User.objects.get(id=settings.DEBUG_USER_ID))
-        return Container.objects.filter(shelf__author=self.request.user)
-
-
-class ContainerDetail(generics.RetrieveAPIView):
-    # queryset = Container.objects.all()
-    serializer_class = ContainerSerializer
-    if settings.DEBUG_USER_ID:
-        permission_classes = (permissions.AllowAny,)
-    else:
-        permission_classes = (permissions.IsAuthenticated,)
-
-    def get_queryset(self):
-        """Filter the container of the current user by the author of the
-        shelf.
-        """
-        if settings.DEBUG_USER_ID:
-            return Container.objects.filter(
-                shelf__author=User.objects.get(id=settings.DEBUG_USER_ID))
-        return Container.objects.filter(shelf__author=self.request.user)
-
-
 class BinderViewSet(viewsets.ModelViewSet):
     """Binder view set based on different serializers."""
 
@@ -216,7 +175,7 @@ class BinderViewSet(viewsets.ModelViewSet):
             user = User.objects.get(id=settings.DEBUG_USER_ID)
         else:
             user = self.request.user
-        queryset = Binder.objects.filter(container__shelf__author=user)
+        queryset = Binder.objects.filter(shelf__author=user)
 
         if self.action == 'list':
             # Filtering against query parameters

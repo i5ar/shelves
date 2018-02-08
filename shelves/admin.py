@@ -17,7 +17,6 @@ from wagtail.contrib.modeladmin.options import (
 from .models import (
     Customer,
     Shelf,
-    Container,
     Binder,
     Upload,
     Attached,
@@ -27,9 +26,9 @@ from .models import (
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
     list_display = (
-        "uuid",
+        "id",
         "code",
-        "name",  # `name` previously `user`
+        "name",
         "get_binder_id",
         "get_author_username",
     )
@@ -80,22 +79,15 @@ class ShelfAdmin(admin.ModelAdmin):
         }),
         ('Size options', {
             'classes': ('wide',),
-            'description': _(
-                "This option can be used for regular shelves."),
+            'description': _("Shelf size."),
             'fields': (('cols', 'rows'), ),
-        }),
-        ('Number options', {
-            'classes': ('wide',),
-            'description': _(
-                "This option can be used for irregular shelves. "),
-            'fields': ('nums', ),
         }),
     )
     prepopulated_fields = {"code": ("name",)}
 
     def view_size(self, obj):
         if obj.cols and obj.rows:
-            return "{}x{}".format(obj.cols, obj.rows)
+            return "{}*{}".format(obj.cols, obj.rows)
 
     view_size.short_description = _("Size")
     view_size.empty_value_display = '-'
@@ -106,18 +98,8 @@ class ShelfAdmin(admin.ModelAdmin):
         'name',
         'desc',
         'view_size',
-        'nums',
-        'get_binders_number',
         'get_author_username',
     )
-
-    def get_binders_number(self, obj):
-        binders = Binder.objects.all()
-        containers_with_binders = set([i.container for i in binders])
-        containers = set(Container.objects.filter(shelf=obj))
-        return len(containers_with_binders & containers)
-
-    get_binders_number.short_description = _('Binders number')
 
     def get_author_username(self, obj):
         return obj.author.username
@@ -127,9 +109,9 @@ class ShelfAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         """Make ``author`` field and dimensional fields readonly."""
         if obj and request.user.is_superuser:
-            return ['cols', 'rows', 'nums']
+            return ['cols', 'rows']
         elif obj and not request.user.is_superuser:
-            return ['cols', 'rows', 'nums', 'author']
+            return ['cols', 'rows', 'author']
         else:
             return []
 
@@ -151,24 +133,6 @@ class ShelfAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
-@admin.register(Container)
-class ContainerAdmin(admin.ModelAdmin):
-    list_display = ('id', 'col', 'row', 'shelf', 'get_shelf_name')
-    readonly_fields = ('shelf', 'col', 'row')
-    fields = ('shelf', ('col', 'row'))
-    # prepopulated_fields = {'jsoncoord': ('col', 'row',)}
-
-    def get_shelf_name(self, obj):
-        return obj.shelf.name
-
-    get_shelf_name.short_description = _('Shelf name')
-
-    # https://stackoverflow.com/questions/4043843/
-    def has_delete_permission(self, request, obj=None):
-        """Disable the delete link."""
-        return False
-
-
 class AttachedInline(admin.TabularInline):
     model = Attached
     extra = 1
@@ -176,7 +140,6 @@ class AttachedInline(admin.TabularInline):
 
 @admin.register(Binder)
 class BinderAdmin(admin.ModelAdmin):
-    # search_fields = ('title', 'customer__code', 'customer__user__username')
     search_fields = (
         'title',
         'content',
@@ -184,7 +147,25 @@ class BinderAdmin(admin.ModelAdmin):
         'customer__name',
     )
 
+    fieldsets = (
+        (None, {
+            'fields': ('title', 'content', 'customer', 'color')
+        }),
+        ('Position', {
+            'classes': ('wide',),
+            'description': _("Position in the shelf."),
+            'fields': (('col', 'row', 'shelf',),),
+        }),
+    )
+
     inlines = [AttachedInline]
+
+    def view_coord(self, obj):
+        if obj.col and obj.row:
+            return "[{}, {}]".format(obj.col, obj.row)
+
+    view_coord.short_description = _("Coordinate")
+    view_coord.empty_value_display = '-'
 
     def get_customer_name(self, obj):
         if obj.customer:
@@ -194,30 +175,25 @@ class BinderAdmin(admin.ModelAdmin):
         if obj.customer:
             return obj.customer.code
 
-    def get_container_id(self, obj):
-        if obj.container:
-            return obj.container.id
-
     def get_shelf_id(self, obj):
-        if obj.container.shelf:
-            return obj.container.shelf.id
+        if obj.shelf:
+            return obj.shelf.id
 
     get_customer_code.short_description = _('Customer code')
     get_customer_name.short_description = _('Customer name')
-    get_container_id.short_description = _('Container')
     get_shelf_id.short_description = _('Shelf')
 
     list_display = (
         'id',
         'title',
         'updated',
+        'view_coord',
         'customer',
         'get_customer_code',
         'get_customer_name',
-        'get_container_id',
         'get_shelf_id')
 
-    list_filter = ('customer', 'container__shelf__name')
+    list_filter = ('customer', 'shelf__name')
 
 
 @admin.register(Upload)
@@ -285,44 +261,3 @@ class UploadAdmin(admin.ModelAdmin):
                         'Be sure to provide an id field.'
                     ), code='invalid'
                 )
-
-
-class CustomerWagtailAdmin(ModelAdmin):
-    model = Customer
-    # menu_label = _('Customer')
-    list_display = ('name', 'code')  # `name` previously `user`
-    list_filter = ('name', 'code')  # `name` previously `user`
-    search_fields = ('name', 'code')  # `name` previously `user`
-    menu_icon = 'group'
-
-
-class ShelfWagtailAdmin(ModelAdmin):
-    model = Shelf
-    list_display = ('name', 'cols', 'rows')
-    menu_icon = 'table'
-
-
-class BinderWagtailAdmin(ModelAdmin):
-    model = Binder
-    # menu_label = _('Binder')
-    list_display = ('customer', 'container')
-    list_filter = ('customer',)
-    search_fields = ('customer', )
-    menu_icon = 'folder-open-1'
-
-
-class UploadWagtailAdmin(ModelAdmin):
-    model = Upload
-    menu_icon = 'order-up'
-
-
-class ShelvesWagtailAdminGroup(ModelAdminGroup):
-    items = (
-        CustomerWagtailAdmin,
-        ShelfWagtailAdmin,
-        BinderWagtailAdmin,
-        UploadWagtailAdmin)
-    menu_icon = 'table'
-
-
-modeladmin_register(ShelvesWagtailAdminGroup)
