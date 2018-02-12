@@ -68,7 +68,7 @@ class Shelf(models.Model):
 class Binder(models.Model):
     title = models.CharField(max_length=64, blank=False)
     customer = models.OneToOneField(
-        'Customer', on_delete=models.CASCADE,  # related_name='customer'
+        Customer, on_delete=models.CASCADE,  # related_name='customer'
         blank=True, null=True)
     shelf = models.ForeignKey(
         Shelf, on_delete=models.CASCADE)
@@ -104,7 +104,7 @@ class Binder(models.Model):
 class Attached(models.Model):
     """Binder attachments."""
     title = models.CharField(_('Title'), max_length=64)
-    binder = models.ForeignKey('Binder', on_delete=models.CASCADE)
+    binder = models.ForeignKey(Binder, on_delete=models.CASCADE)
     file = models.FileField(upload_to='docs')
 
     class Meta:

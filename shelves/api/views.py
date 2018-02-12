@@ -19,10 +19,10 @@ from rest_framework.parsers import (
 from .serializers import (
     UserSerializer,
     CustomerSerializer,
-    ShelfListSerializer,
-    ShelfDetailSerializer,
-    BinderListSerializer,
-    BinderCreateRetrieveUpdateDestroySerializer,
+    ShelfListCreateSerializer,
+    ShelfRetrieveUpdateDestroySerializer,
+    BinderListRetrieveSerializer,
+    BinderCreateUpdateDestroySerializer,
     UploadSerializer,
 )
 
@@ -38,19 +38,19 @@ from ..models import (
 def shelves_root(request, format=None):
     return Response({
         'users': reverse(
-            'shelves-api:user-list', request=request, format=format),
+            'shelves-api:users-api', request=request, format=format),
         'customers': reverse(
-            'shelves-api:customer-list', request=request, format=format),
+            'shelves-api:customers-api', request=request, format=format),
         'binders': reverse(
-            'shelves-api:binder-list', request=request, format=format),
+            'shelves-api:binders-api', request=request, format=format),
         'shelves': reverse(
-            'shelves-api:shelf-list', request=request, format=format),
+            'shelves-api:shelves-api', request=request, format=format),
         'uploads': reverse(
-            'shelves-api:upload-list', request=request, format=format)
+            'shelves-api:uploads-api', request=request, format=format)
     })
 
 
-class CustomerList(generics.ListCreateAPIView):
+class CustomerListCreate(generics.ListCreateAPIView):
     # queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
     if settings.DEBUG_USER_ID:
@@ -72,7 +72,7 @@ class CustomerList(generics.ListCreateAPIView):
         return Customer.objects.filter(author=self.request.user)
 
 
-class CustomerDetail(generics.RetrieveUpdateDestroyAPIView):
+class CustomerRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     # queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
     lookup_field = 'code'
@@ -89,7 +89,7 @@ class CustomerDetail(generics.RetrieveUpdateDestroyAPIView):
         return Customer.objects.filter(author=self.request.user)
 
 
-class ShelfList(generics.ListCreateAPIView):
+class ShelfListCreate(generics.ListCreateAPIView):
     """List and create shelves.
 
     Front methods:
@@ -98,7 +98,7 @@ class ShelfList(generics.ListCreateAPIView):
     """
 
     # queryset = Shelf.objects.all()
-    serializer_class = ShelfListSerializer
+    serializer_class = ShelfListCreateSerializer
     if settings.DEBUG_USER_ID:
         permission_classes = (permissions.AllowAny,)
     else:
@@ -118,7 +118,7 @@ class ShelfList(generics.ListCreateAPIView):
         return Shelf.objects.filter(author=self.request.user)
 
 
-class ShelfDetail(generics.RetrieveUpdateDestroyAPIView):
+class ShelfRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     """Retrieve update and destroy shelf.
 
     Front methods:
@@ -128,7 +128,7 @@ class ShelfDetail(generics.RetrieveUpdateDestroyAPIView):
 
     lookup_field = 'code'
     # queryset = Shelf.objects.all()
-    serializer_class = ShelfDetailSerializer
+    serializer_class = ShelfRetrieveUpdateDestroySerializer
     if settings.DEBUG_USER_ID:
         permission_classes = (permissions.AllowAny,)
     else:
@@ -153,10 +153,10 @@ class BinderViewSet(viewsets.ModelViewSet):
         permission_classes = (permissions.IsAuthenticated,)
 
     def get_serializer_class(self):
-        if self.action == 'list':
-            return BinderListSerializer
+        if self.action == 'list' or self.action == 'retrieve':
+            return BinderListRetrieveSerializer
         else:
-            return BinderCreateRetrieveUpdateDestroySerializer
+            return BinderCreateUpdateDestroySerializer
 
     def get_queryset(self):
         """
@@ -209,7 +209,7 @@ class UserList(generics.ListAPIView):
     permission_classes = (permissions.IsAdminUser,)
 
 
-class UserDetail(generics.RetrieveAPIView):
+class UserRetrieve(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (permissions.IsAdminUser,)

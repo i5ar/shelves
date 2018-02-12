@@ -35,11 +35,12 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
             'username'
         )
         extra_kwargs = {
-            'url': {'view_name': "shelves-api:user-detail"},
+            'url': {'view_name': "shelves-api:users_detail-api"},
         }
 
 
 class CustomerSerializer(serializers.HyperlinkedModelSerializer):
+
     def validate(self, data):
         """Validate unique together ``author`` and ``code`` fields."""
         custs = Customer.objects.filter(author=self.context['request'].user)
@@ -54,21 +55,23 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
         # NOTE: The author is created from the generic view.
         fields = (
             'url',
+            'id',
             'name',
             'code',
             'note'
         )
         extra_kwargs = {
             'url': {
-                'view_name': "shelves-api:customer-detail",
+                'view_name': "shelves-api:customers_detail-api",
                 'lookup_field': "code"
             },
         }
 
 
-class BinderListSerializer(serializers.ModelSerializer):
+class BinderListRetrieveSerializer(serializers.ModelSerializer):
+
     url = serializers.HyperlinkedIdentityField(
-        view_name="shelves-api:binder-detail",
+        view_name="shelves-api:binders_detail-api",
     )
     customer = CustomerSerializer(many=False, read_only=True)
 
@@ -88,7 +91,8 @@ class BinderListSerializer(serializers.ModelSerializer):
         )
 
 
-class BinderCreateRetrieveUpdateDestroySerializer(serializers.ModelSerializer):
+class BinderCreateUpdateDestroySerializer(serializers.ModelSerializer):
+
     def validate(self, data):
         if data.get('shelf').cols:
             if data.get('col') and not data.get('row'):
@@ -119,12 +123,10 @@ class BinderCreateRetrieveUpdateDestroySerializer(serializers.ModelSerializer):
         )
 
 
-class ShelfListSerializer(serializers.HyperlinkedModelSerializer):
-    """Writable nested serializers.
+class ShelfListCreateSerializer(serializers.HyperlinkedModelSerializer):
 
-    TODO: Write from shelf
-    http://www.django-rest-framework.org/api-guide/relations/#writable-nested-serializers
-    """
+    binder_set = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
     def validate(self, data):
         """Validate unique together ``author`` and ``code`` fields."""
         shelves = Shelf.objects.filter(author=self.context['request'].user)
@@ -147,16 +149,19 @@ class ShelfListSerializer(serializers.HyperlinkedModelSerializer):
             'code',
             'cols',
             'rows',
+            'binder_set',
         )
         extra_kwargs = {
             'url': {
-                'view_name': "shelves-api:shelf-detail",
+                'view_name': "shelves-api:shelves_detail-api",
                 'lookup_field': "code"
             }
         }
 
 
-class ShelfDetailSerializer(serializers.ModelSerializer):
+class ShelfRetrieveUpdateDestroySerializer(serializers.ModelSerializer):
+
+    binder_set = BinderListRetrieveSerializer(many=True, read_only=True)
 
     # NOTE: Make dimensional fields read only.
     cols = serializers.IntegerField(read_only=True)
@@ -173,11 +178,13 @@ class ShelfDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shelf
         fields = (
+            'id',
             'name',
             'code',
             'desc',
             'cols',
             'rows',
+            'binder_set',
         )
 
 
