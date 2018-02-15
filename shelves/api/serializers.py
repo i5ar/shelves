@@ -1,6 +1,5 @@
 import os
 import logging
-# from collections import OrderedDict
 
 from django.contrib.auth.models import User
 from django.conf import settings
@@ -81,12 +80,12 @@ class BinderListRetrieveSerializer(serializers.ModelSerializer):
             'url',
             'id',
             'title',
-            'color',
             'content',
             'customer',
-            'shelf',
+            'color',
             'col',
             'row',
+            'shelf',
             'updated'
         )
 
@@ -113,12 +112,12 @@ class BinderCreateUpdateDestroySerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'title',
-            'color',
             'content',
             'customer',
-            'shelf',
+            'color',
             'col',
             'row',
+            'shelf',
             'updated'
         )
 
@@ -147,6 +146,7 @@ class ShelfListCreateSerializer(serializers.HyperlinkedModelSerializer):
             'id',
             'name',
             'code',
+            'desc',
             'cols',
             'rows',
             'binder_set',

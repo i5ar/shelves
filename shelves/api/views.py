@@ -1,12 +1,17 @@
+import csv
 import operator
 from functools import reduce
 
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.conf import settings
+# from django.core.files.storage import default_storage
+from django.db import IntegrityError
+from django.utils.translation import ugettext as _
 
 from rest_framework import generics, viewsets
 from rest_framework import permissions
+from rest_framework.serializers import ValidationError
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -227,13 +232,78 @@ class UploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
     serializer_class = UploadSerializer
 
+    if settings.DEBUG_USER_ID:
+        permission_classes = (permissions.AllowAny,)
+    else:
+        permission_classes = (permissions.IsAuthenticated,)
+
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            my_file = Upload(**serializer.validated_data)
-            my_file.save()
-            # TODO: Read CSV.
-            # https://stackoverflow.com/questions/34832403/
+            # Save CSV file
+            # upload = Upload(**serializer.validated_data)
+            # upload.save()
+
+            # Import CSV data im memory
+            # https://www.reddit.com/r/django/comments/2grsay/how_to_read_csv_file_from_memory/
+            import io
+
+            csv_file = self.request.data.get('csv_file')
+            # with open(default_storage.path(upload.csv_file)) as f:
+            with io.StringIO(csv_file.read().decode('utf-8')) as f:
+                has_header = csv.Sniffer().has_header(f.read(1024))
+                f.seek(0)
+                if has_header:
+                    reader = csv.DictReader(f)
+                    print(f)
+                    for row in reader:
+                        try:
+                            Customer.objects.get_or_create(
+                                name=row['name'],
+                                code=row['code'],
+                                note=row['note'],
+                                author=self.request.user
+                            )
+                        except TypeError as e:
+                            raise ValidationError(e, code='auth')
+                        except IntegrityError as e:
+                            """
+                            An integrity error may happen if two customers have the
+                            same code.
+                            """
+                            # print('{0!r}'.format(e))
+                            raise ValidationError(e, code='integrity')
+                        except KeyError as e:
+                            """
+                            Key error may happen if CSV header is divergent
+                            from model fields
+                            """
+                            try:
+                                """
+                                Pretend internationalized field name match the
+                                CSV header
+                                """
+                                Customer.objects.get_or_create(
+                                    name=row[_('name')],
+                                    code=row[_('code')],
+                                    note=row[_('note')],
+                                    author=self.request.user
+                                )
+                            except KeyError as e:
+                                raise ValidationError(
+                                    'Is the field {} present in the CSV file '
+                                    'header?'.format(e),
+                                    code='key'
+                                )
+
+                else:
+                    raise ValidationError(
+                        _(
+                            'The CSV file require a proper header in order.'
+                            'Be sure to provide an id field.'
+                        ), code='invalid'
+                    )
+
             return Response({'success': 'Imported successfully'})
         else:
             return Response(serializer.errors, status=400)
