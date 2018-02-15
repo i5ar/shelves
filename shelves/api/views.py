@@ -29,6 +29,7 @@ from .serializers import (
     BinderListRetrieveSerializer,
     BinderCreateUpdateDestroySerializer,
     UploadSerializer,
+    AttachmentSerializer,
 )
 
 from ..models import (
@@ -36,6 +37,7 @@ from ..models import (
     Shelf,
     Binder,
     Upload,
+    Attachment,
 )
 
 
@@ -51,7 +53,9 @@ def shelves_root(request, format=None):
         'shelves': reverse(
             'shelves-api:shelves-api', request=request, format=format),
         'uploads': reverse(
-            'shelves-api:uploads-api', request=request, format=format)
+            'shelves-api:uploads-api', request=request, format=format),
+        'attachments': reverse(
+            'shelves-api:attachments-api', request=request, format=format)
     })
 
 
@@ -244,6 +248,11 @@ class UploadView(APIView):
             # upload = Upload(**serializer.validated_data)
             # upload.save()
 
+            if settings.DEBUG_USER_ID:
+                user = User.objects.get(id=settings.DEBUG_USER_ID)
+            else:
+                user = self.request.user
+
             # Import CSV data im memory
             # https://www.reddit.com/r/django/comments/2grsay/how_to_read_csv_file_from_memory/
             import io
@@ -255,14 +264,13 @@ class UploadView(APIView):
                 f.seek(0)
                 if has_header:
                     reader = csv.DictReader(f)
-                    print(f)
                     for row in reader:
                         try:
                             Customer.objects.get_or_create(
                                 name=row['name'],
                                 code=row['code'],
                                 note=row['note'],
-                                author=self.request.user
+                                author=user
                             )
                         except TypeError as e:
                             raise ValidationError(e, code='auth')
@@ -287,7 +295,7 @@ class UploadView(APIView):
                                     name=row[_('name')],
                                     code=row[_('code')],
                                     note=row[_('note')],
-                                    author=self.request.user
+                                    author=user
                                 )
                             except KeyError as e:
                                 raise ValidationError(
@@ -307,3 +315,37 @@ class UploadView(APIView):
             return Response({'success': 'Imported successfully'})
         else:
             return Response(serializer.errors, status=400)
+
+
+class AttachmentListCreate(generics.ListCreateAPIView):
+    # parser_classes = (MultiPartParser, FormParser)
+
+    serializer_class = AttachmentSerializer
+    if settings.DEBUG_USER_ID:
+        permission_classes = (permissions.AllowAny,)
+    else:
+        permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        if settings.DEBUG_USER_ID:
+            user = User.objects.get(id=settings.DEBUG_USER_ID)
+        else:
+            user = self.request.user
+        return Attachment.objects.filter(binder__shelf__author=user)
+
+
+class AttachmentRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+    # parser_classes = (MultiPartParser, FormParser)
+
+    serializer_class = AttachmentSerializer
+    if settings.DEBUG_USER_ID:
+        permission_classes = (permissions.AllowAny,)
+    else:
+        permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        if settings.DEBUG_USER_ID:
+            user = User.objects.get(id=settings.DEBUG_USER_ID)
+        else:
+            user = self.request.user
+        return Attachment.objects.filter(binder__shelf__author=user)

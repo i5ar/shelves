@@ -19,7 +19,7 @@ from .models import (
     Shelf,
     Binder,
     Upload,
-    Attached,
+    Attachment,
 )
 
 
@@ -133,8 +133,8 @@ class ShelfAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
-class AttachedInline(admin.TabularInline):
-    model = Attached
+class AttachmentInline(admin.TabularInline):
+    model = Attachment
     extra = 1
 
 
@@ -158,7 +158,7 @@ class BinderAdmin(admin.ModelAdmin):
         }),
     )
 
-    inlines = [AttachedInline]
+    inlines = [AttachmentInline]
 
     def view_coord(self, obj):
         if obj.col and obj.row:

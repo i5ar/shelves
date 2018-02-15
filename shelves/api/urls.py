@@ -40,5 +40,17 @@ urlpatterns = [
         name='shelves_detail-api'
     ),
 
-    url(r'^uploads/$', views.UploadView.as_view(), name="uploads-api")
+    url(r'^uploads/$', views.UploadView.as_view(), name="uploads-api"),
+
+    url(
+        r'^attachments/$',
+        views.AttachmentListCreate.as_view(),
+        name="attachments-api"
+    ),
+    url(
+        r'^attachments/(?P<pk>[0-9]+)/$',
+        views.AttachmentRetrieveUpdateDestroy.as_view(),
+        name='attachments_detail-api'
+    ),
+
 ]

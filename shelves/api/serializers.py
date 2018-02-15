@@ -13,6 +13,7 @@ from ..models import (
     Shelf,
     Binder,
     Upload,
+    Attachment,
 )
 
 # NOTE: Logging configuration used by the debug window in `startsession.sh`.
@@ -67,12 +68,24 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
         }
 
 
+class AttachmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Attachment
+        fields = (
+            'id',
+            'title',
+            'binder',
+            'file',
+        )
+
+
 class BinderListRetrieveSerializer(serializers.ModelSerializer):
 
     url = serializers.HyperlinkedIdentityField(
         view_name="shelves-api:binders_detail-api",
     )
     customer = CustomerSerializer(many=False, read_only=True)
+    attachment_set = AttachmentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Binder
@@ -86,6 +99,7 @@ class BinderListRetrieveSerializer(serializers.ModelSerializer):
             'col',
             'row',
             'shelf',
+            'attachment_set',
             'updated'
         )
 

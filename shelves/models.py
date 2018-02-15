@@ -101,7 +101,7 @@ class Binder(models.Model):
         verbose_name_plural = _('Binders')
 
 
-class Attached(models.Model):
+class Attachment(models.Model):
     """Binder attachments."""
     title = models.CharField(_('Title'), max_length=64)
     binder = models.ForeignKey(Binder, on_delete=models.CASCADE)
