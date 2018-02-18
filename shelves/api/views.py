@@ -9,7 +9,7 @@ from django.conf import settings
 from django.db import IntegrityError
 from django.utils.translation import ugettext as _
 
-from rest_framework import generics, viewsets
+from rest_framework import generics, viewsets, status
 from rest_framework import permissions
 from rest_framework.serializers import ValidationError
 from rest_framework.decorators import api_view
@@ -30,6 +30,7 @@ from .serializers import (
     BinderCreateUpdateDestroySerializer,
     UploadSerializer,
     AttachmentSerializer,
+    BinderSerializer
 )
 
 from ..models import (
@@ -149,6 +150,127 @@ class ShelfRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
             return Shelf.objects.filter(author=User.objects.get(
                 id=settings.DEBUG_USER_ID))
         return Shelf.objects.filter(author=self.request.user)
+
+
+class BinderListCreate(generics.ListCreateAPIView):
+    serializer_class = BinderSerializer
+    if settings.DEBUG_USER_ID:
+        permission_classes = (permissions.AllowAny,)
+    else:
+        permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        if settings.DEBUG_USER_ID:
+            user = User.objects.get(id=settings.DEBUG_USER_ID)
+        else:
+            user = self.request.user
+        queryset = Binder.objects.filter(shelf__author=user)
+
+        # Filtering against query parameters
+        # http://www.django-rest-framework.org/api-guide/filtering/#filtering-against-query-parameters
+        query = self.request.query_params.get('q', None)
+        if query is not None:
+            query_list = query.split()
+            # TODO: DRY because of ``BinderListView`` queryset.
+            queryset = queryset.filter(
+                reduce(
+                    operator.and_,
+                    (Q(title__icontains=q) for q in query_list)
+                ) | reduce(
+                    operator.and_,
+                    (Q(content__icontains=q) for q in query_list)
+                ) | reduce(
+                    operator.and_,
+                    (Q(customer__code__icontains=q) for q in query_list)
+                ) | reduce(
+                    operator.and_,
+                    (Q(customer__name__icontains=q) for q in query_list)
+                )
+            )
+
+        return queryset
+
+    # https://stackoverflow.com/questions/35501137/
+    def create(self, request, *args, **kwargs):
+        """Nest customer fields in the response."""
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            data = serializer.data
+            try:
+                c = Customer.objects.get(id=data.get('customer'))
+                customer = {
+                    'id': c.id,
+                    'name': c.name,
+                    'code': c.code,
+                    'note': c.note
+                }
+            except Customer.DoesNotExist:
+                customer = None
+            data['customer'] = customer
+            return Response(
+                data,
+                status=status.HTTP_201_CREATED,
+                headers=self.get_success_headers(data)
+            )
+
+
+class BinderRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = BinderSerializer
+    if settings.DEBUG_USER_ID:
+        permission_classes = (permissions.AllowAny,)
+    else:
+        permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        if settings.DEBUG_USER_ID:
+            user = User.objects.get(id=settings.DEBUG_USER_ID)
+        else:
+            user = self.request.user
+        return Binder.objects.filter(shelf__author=user)
+
+    # https://stackoverflow.com/questions/39083414/
+    def retrieve(self, request, *args, **kwargs):
+        """Nest customer fields in the response."""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        data = serializer.data
+        try:
+            c = Customer.objects.get(id=data.get('customer'))
+            customer = {
+                'id': c.id,
+                'name': c.name,
+                'code': c.code,
+                'note': c.note
+            }
+            # NOTE: Get all the fields.
+            # for f in c._meta.get_fields():
+            #     att = getattr(c, f.name)
+            #     customer[f.name] = int(att) if (type(att) == int) else str(att)
+        except Customer.DoesNotExist:
+            customer = None
+        data['customer'] = customer
+        return Response(data)
+
+    def update(self, request, *args, **kwargs):
+        """Nest customer fields in the response."""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        if serializer.is_valid():
+            self.perform_update(serializer)
+            data = serializer.data
+            try:
+                c = Customer.objects.get(id=data.get('customer'))
+                customer = {
+                    'id': c.id,
+                    'name': c.name,
+                    'code': c.code,
+                    'note': c.note
+                }
+            except Customer.DoesNotExist:
+                customer = None
+            data['customer'] = customer
+            return Response(data)
 
 
 class BinderViewSet(viewsets.ModelViewSet):

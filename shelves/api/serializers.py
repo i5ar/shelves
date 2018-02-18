@@ -79,6 +79,29 @@ class AttachmentSerializer(serializers.ModelSerializer):
         )
 
 
+class BinderSerializer(serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name="shelves-api:binders_detail-api",
+    )
+    attachment_set = AttachmentSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Binder
+        fields = (
+            'url',
+            'id',
+            'title',
+            'content',
+            'customer',
+            'color',
+            'col',
+            'row',
+            'shelf',
+            'attachment_set',
+            'updated'
+        )
+
+
 class BinderListRetrieveSerializer(serializers.ModelSerializer):
 
     url = serializers.HyperlinkedIdentityField(

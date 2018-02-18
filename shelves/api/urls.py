@@ -23,6 +23,17 @@ urlpatterns = [
         name='customers_detail-api'
     ),
 
+    # url(
+    #     r'^binders/$',
+    #     views.BinderListCreate.as_view(),
+    #     name='binders-api'
+    # ),
+    # url(
+    #     r'^binders/(?P<pk>[0-9]+)/$',
+    #     views.BinderRetrieveUpdateDestroy.as_view(),
+    #     name='binders_detail-api'
+    # ),
+
     url(r'^binders/$', views.BinderViewSet.as_view({
         'get': 'list',
         'post': 'create'
