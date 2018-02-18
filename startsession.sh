@@ -46,21 +46,21 @@ sleep 0.25
 tmux send-keys -t gerp:0 "cd $back_end" C-m
 tmux send-keys -t gerp:0 "git log $o -2 | cat -" C-m
 
-tmux new-window -t gerp:1 -n debug
+tmux new-window -t gerp:1 -n front_end
 sleep 0.5
-tmux send-keys -t gerp:1 "source bin/activate" C-m
-sleep 0.25
-tmux send-keys -t gerp:1 "cd $back_end" C-m
-tmux send-keys -t gerp:1 "tail -f -vn +1 *.log" C-m
-
-tmux new-window -t gerp:2 -n front_end
-sleep 0.5
-tmux send-keys -t gerp:2 "cd $front_end" C-m
-tmux send-keys -t gerp:2 "au run --watch" C-m
+tmux send-keys -t gerp:1 "cd $front_end" C-m
+tmux send-keys -t gerp:1 "au run --watch" C-m
 tmux split-window
 sleep 0.5
-tmux send-keys -t gerp:2 "cd $front_end" C-m
-tmux send-keys -t gerp:2 "git log $o --pretty=format:\"$f\" -8 | cat -" C-m
+tmux send-keys -t gerp:1 "cd $front_end" C-m
+tmux send-keys -t gerp:1 "git log $o --pretty=format:\"$f\" -8 | cat -" C-m
+
+tmux new-session -d -s logger -n back_end_logger
+sleep 0.5
+tmux send-keys -t logger:0 "source bin/activate" C-m
+sleep 0.25
+tmux send-keys -t logger:0 "cd $back_end" C-m
+tmux send-keys -t logger:0 "tail -f -vn +1 *.log" C-m
 
 tmux select-window -t gerp:0
 
