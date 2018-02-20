@@ -194,25 +194,26 @@ class BinderListCreate(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         """Nest customer fields in the response."""
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            self.perform_create(serializer)
-            data = serializer.data
-            try:
-                c = Customer.objects.get(id=data.get('customer'))
-                customer = {
-                    'id': c.id,
-                    'name': c.name,
-                    'code': c.code,
-                    'note': c.note
-                }
-            except Customer.DoesNotExist:
-                customer = None
-            data['customer'] = customer
-            return Response(
-                data,
-                status=status.HTTP_201_CREATED,
-                headers=self.get_success_headers(data)
-            )
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        data = serializer.data
+        try:
+            c = Customer.objects.get(id=data.get('customer'))
+            customer = {
+                'id': c.id,
+                'name': c.name,
+                'code': c.code,
+                'note': c.note
+            }
+            print(customer)
+        except Customer.DoesNotExist:
+            customer = None
+        data['customer'] = customer
+        return Response(
+            data,
+            status=status.HTTP_201_CREATED,
+            headers=self.get_success_headers(data)
+        )
 
 
 class BinderRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
@@ -256,21 +257,21 @@ class BinderRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
         """Nest customer fields in the response."""
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data)
-        if serializer.is_valid():
-            self.perform_update(serializer)
-            data = serializer.data
-            try:
-                c = Customer.objects.get(id=data.get('customer'))
-                customer = {
-                    'id': c.id,
-                    'name': c.name,
-                    'code': c.code,
-                    'note': c.note
-                }
-            except Customer.DoesNotExist:
-                customer = None
-            data['customer'] = customer
-            return Response(data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        data = serializer.data
+        try:
+            c = Customer.objects.get(id=data.get('customer'))
+            customer = {
+                'id': c.id,
+                'name': c.name,
+                'code': c.code,
+                'note': c.note
+            }
+        except Customer.DoesNotExist:
+            customer = None
+        data['customer'] = customer
+        return Response(data)
 
 
 class BinderViewSet(viewsets.ModelViewSet):
@@ -352,7 +353,7 @@ class UserRetrieve(generics.RetrieveAPIView):
 # https://stackoverflow.com/questions/39887923/
 class UploadView(APIView):
     """
-    NOTE: Use only `Authorization` header in Postman.
+    NOTE: Use only `Authorization` header in the request.
 
     """
     parser_classes = (MultiPartParser, FormParser)
@@ -471,3 +472,21 @@ class AttachmentRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
         else:
             user = self.request.user
         return Attachment.objects.filter(binder__shelf__author=user)
+
+    def update(self, request, *args, **kwargs):
+        """Use a ``partial`` update (PATCH) for the title and the binder id.
+
+        A new file would be otherwise required each time.
+
+        """
+        instance = self.get_object()
+        # Partial update
+        # https://stackoverflow.com/questions/27980390/
+        serializer = self.get_serializer(
+            instance,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
