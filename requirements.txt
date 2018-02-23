@@ -36,6 +36,7 @@ PyJWT==1.5.0
 pyparsing==2.2.0
 python-dateutil==2.6.0
 pytz==2017.2
+redis==2.10.6
 reportlab==3.4.0
 requests==2.18.1
 s3transfer==0.1.10
