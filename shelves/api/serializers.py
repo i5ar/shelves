@@ -83,7 +83,8 @@ class BinderSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name="shelves-api:binders_detail-api",
     )
-    attachment_set = AttachmentSerializer(many=True, read_only=True)
+    # NOTE: Related name for ``attachment_set``.
+    attachments = AttachmentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Binder
@@ -97,7 +98,7 @@ class BinderSerializer(serializers.ModelSerializer):
             'col',
             'row',
             'shelf',
-            'attachment_set',
+            'attachments',
             'updated'
         )
 
@@ -108,7 +109,8 @@ class BinderListRetrieveSerializer(serializers.ModelSerializer):
         view_name="shelves-api:binders_detail-api",
     )
     customer = CustomerSerializer(many=False, read_only=True)
-    attachment_set = AttachmentSerializer(many=True, read_only=True)
+    # NOTE: Related name for ``attachment_set``.
+    attachments = AttachmentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Binder
@@ -122,7 +124,7 @@ class BinderListRetrieveSerializer(serializers.ModelSerializer):
             'col',
             'row',
             'shelf',
-            'attachment_set',
+            'attachments',
             'updated'
         )
 
@@ -160,8 +162,8 @@ class BinderCreateUpdateDestroySerializer(serializers.ModelSerializer):
 
 
 class ShelfListCreateSerializer(serializers.HyperlinkedModelSerializer):
-
-    binder_set = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    # NOTE: Related name for ``binder_set``.
+    binders = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     def validate(self, data):
         """Validate unique together ``author`` and ``code`` fields."""
@@ -186,7 +188,7 @@ class ShelfListCreateSerializer(serializers.HyperlinkedModelSerializer):
             'desc',
             'cols',
             'rows',
-            'binder_set',
+            'binders',
         )
         extra_kwargs = {
             'url': {
@@ -197,8 +199,8 @@ class ShelfListCreateSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class ShelfRetrieveUpdateDestroySerializer(serializers.ModelSerializer):
-
-    binder_set = BinderListRetrieveSerializer(many=True, read_only=True)
+    # NOTE: Related name for ``binder_set``.
+    binders = BinderListRetrieveSerializer(many=True, read_only=True)
 
     # NOTE: Make dimensional fields read only.
     cols = serializers.IntegerField(read_only=True)
@@ -221,7 +223,7 @@ class ShelfRetrieveUpdateDestroySerializer(serializers.ModelSerializer):
             'desc',
             'cols',
             'rows',
-            'binder_set',
+            'binders',
         )
 
 

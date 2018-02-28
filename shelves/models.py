@@ -20,7 +20,8 @@ class Customer(models.Model):
     )
     note = models.TextField(_('Note'), max_length=128, blank=True)
     author = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
     )
 
     def __str__(self):
@@ -47,7 +48,9 @@ class Shelf(models.Model):
         help_text=_('The number of rows'), blank=True, null=True)
 
     author = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
 
     def clean(self):
         """Validate columns and rows fields."""
@@ -69,9 +72,13 @@ class Binder(models.Model):
     title = models.CharField(max_length=64, blank=False)
     customer = models.OneToOneField(
         Customer, on_delete=models.CASCADE,  # related_name='customer'
-        blank=True, null=True)
+        blank=True, null=True
+    )
     shelf = models.ForeignKey(
-        Shelf, on_delete=models.CASCADE)
+        Shelf,
+        on_delete=models.CASCADE,
+        related_name='binders'
+    )
     col = models.IntegerField(null=True, blank=True)
     row = models.IntegerField(null=True, blank=True)
     content = models.TextField(_('Binder content'), blank=True)
@@ -104,7 +111,11 @@ class Binder(models.Model):
 class Attachment(models.Model):
     """Binder attachments."""
     title = models.CharField(_('Title'), max_length=64)
-    binder = models.ForeignKey(Binder, on_delete=models.CASCADE)
+    binder = models.ForeignKey(
+        Binder,
+        on_delete=models.CASCADE,
+        related_name='attachments'
+    )
     file = models.FileField(upload_to='docs')
 
     class Meta:
