@@ -103,64 +103,6 @@ class BinderSerializer(serializers.ModelSerializer):
         )
 
 
-class BinderListRetrieveSerializer(serializers.ModelSerializer):
-
-    url = serializers.HyperlinkedIdentityField(
-        view_name="shelves-api:binders_detail-api",
-    )
-    customer = CustomerSerializer(many=False, read_only=True)
-    # NOTE: Related name for ``attachment_set``.
-    attachments = AttachmentSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Binder
-        fields = (
-            'url',
-            'id',
-            'title',
-            'content',
-            'customer',
-            'color',
-            'col',
-            'row',
-            'shelf',
-            'attachments',
-            'updated'
-        )
-
-
-class BinderCreateUpdateDestroySerializer(serializers.ModelSerializer):
-
-    def validate(self, data):
-        if data.get('shelf').cols:
-            if data.get('col') and not data.get('row'):
-                raise ValidationError(_("Row required with col."))
-            if not data.get('col') and data.get('row'):
-                raise ValidationError(_("Col required with row."))
-            if data.get('col') and data.get('col') > data.get('shelf').cols:
-                raise ValidationError(_("Value too big."))
-            if data.get('row') and data.get('row') > data.get('shelf').rows:
-                raise ValidationError(_("Value too big."))
-        else:
-            if data.get('col') and data.get('row'):
-                raise ValidationError(_("Shelf has not a size."))
-        return data
-
-    class Meta:
-        model = Binder
-        fields = (
-            'id',
-            'title',
-            'content',
-            'customer',
-            'color',
-            'col',
-            'row',
-            'shelf',
-            'updated'
-        )
-
-
 class ShelfListCreateSerializer(serializers.HyperlinkedModelSerializer):
     # NOTE: Related name for ``binder_set``.
     binders = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
@@ -199,9 +141,6 @@ class ShelfListCreateSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class ShelfRetrieveUpdateDestroySerializer(serializers.ModelSerializer):
-    # NOTE: Related name for ``binder_set``.
-    binders = BinderListRetrieveSerializer(many=True, read_only=True)
-
     # NOTE: Make dimensional fields read only.
     cols = serializers.IntegerField(read_only=True)
     rows = serializers.IntegerField(read_only=True)
@@ -223,7 +162,7 @@ class ShelfRetrieveUpdateDestroySerializer(serializers.ModelSerializer):
             'desc',
             'cols',
             'rows',
-            'binders',
+            # 'binders',
         )
 
 

@@ -9,7 +9,7 @@ from django.conf import settings
 from django.db import IntegrityError
 from django.utils.translation import ugettext as _
 
-from rest_framework import generics, viewsets, status
+from rest_framework import generics, status
 from rest_framework import permissions
 from rest_framework.serializers import ValidationError
 from rest_framework.decorators import api_view
@@ -26,8 +26,6 @@ from .serializers import (
     CustomerSerializer,
     ShelfListCreateSerializer,
     ShelfRetrieveUpdateDestroySerializer,
-    BinderListRetrieveSerializer,
-    BinderCreateUpdateDestroySerializer,
     UploadSerializer,
     AttachmentSerializer,
     BinderSerializer
@@ -37,7 +35,7 @@ from ..models import (
     Customer,
     Shelf,
     Binder,
-    Upload,
+    # Upload,
     Attachment,
 )
 
@@ -144,6 +142,48 @@ class ShelfRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     else:
         permission_classes = (permissions.IsAuthenticated,)
 
+    # https://stackoverflow.com/questions/45532965/
+    # http://www.django-rest-framework.org/api-guide/generic-views/#mixins
+    # http://www.django-rest-framework.org/tutorial/3-class-based-views/#using-mixins
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        data = serializer.data
+
+        try:
+            # Get binders by shelf code
+            binders = Binder.objects.filter(shelf__code=data.get('code'))
+            cols = data.get('cols')
+            rows = data.get('rows')
+
+            cells = []
+            for i in range(cols):
+                for j in range(rows):
+                    cells.append({'col': i+1, 'row': j+1, 'binders': []})
+
+            for i, cell in enumerate(cells):
+                for b in binders:
+                    if b.col == cell.get('col') and b.row == cell.get('row'):
+                        cells[i]['binders'].append({
+                            'id': b.id,
+                            'col': b.col,
+                            'row': b.row,
+                            'title': b.title,
+                            'content': b.content,
+                            'updated': b.updated,
+                            'customer': {
+                                'id': b.customer.id,
+                                'name': b.customer.name,
+                                'code': b.customer.code,
+                                'note': b.customer.note,
+                            } if b.customer else None,
+                        })
+
+        except Binder.DoesNotExist:
+            cells = None
+        data['cells'] = cells
+        return Response(data)
+
     def get_queryset(self):
         """Filter the shelf of the current user by the author."""
         if settings.DEBUG_USER_ID:
@@ -246,8 +286,8 @@ class BinderRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
             }
             # NOTE: Get all the fields.
             # for f in c._meta.get_fields():
-            #     att = getattr(c, f.name)
-            #     customer[f.name] = int(att) if (type(att) == int) else str(att)
+            #     a = getattr(c, f.name)
+            #     customer[f.name] = int(a) if (type(a) == int) else str(a)
         except Customer.DoesNotExist:
             customer = None
         data['customer'] = customer
@@ -272,67 +312,6 @@ class BinderRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
             customer = None
         data['customer'] = customer
         return Response(data)
-
-
-class BinderViewSet(viewsets.ModelViewSet):
-    """Binder view set based on different serializers."""
-
-    # queryset = Binder.objects.all()
-    # serializer_class = BinderSerializer
-    if settings.DEBUG_USER_ID:
-        permission_classes = (permissions.AllowAny,)
-    else:
-        permission_classes = (permissions.IsAuthenticated,)
-
-    def get_serializer_class(self):
-        if self.action == 'list' or self.action == 'retrieve':
-            return BinderListRetrieveSerializer
-        else:
-            return BinderCreateUpdateDestroySerializer
-
-    def get_queryset(self):
-        """
-        Filter the binders of the current user by the author of the shelf of
-        the container.
-        Filter the binders against query parameters.
-        """
-
-        # NOTE: Debug the action.
-        # http://www.django-rest-framework.org/api-guide/viewsets/#viewset-actions
-        # print('\033[1m' 'DEBUG', end=' ')
-        # print(self.action)
-        # print('\033[0m')
-
-        if settings.DEBUG_USER_ID:
-            user = User.objects.get(id=settings.DEBUG_USER_ID)
-        else:
-            user = self.request.user
-        queryset = Binder.objects.filter(shelf__author=user)
-
-        if self.action == 'list':
-            # Filtering against query parameters
-            # http://www.django-rest-framework.org/api-guide/filtering/#filtering-against-query-parameters
-            query = self.request.query_params.get('q', None)
-            if query is not None:
-                query_list = query.split()
-                # TODO: DRY because of ``BinderListView`` queryset.
-                queryset = queryset.filter(
-                    reduce(
-                        operator.and_,
-                        (Q(title__icontains=q) for q in query_list)
-                    ) | reduce(
-                        operator.and_,
-                        (Q(content__icontains=q) for q in query_list)
-                    ) | reduce(
-                        operator.and_,
-                        (Q(customer__code__icontains=q) for q in query_list)
-                    ) | reduce(
-                        operator.and_,
-                        (Q(customer__name__icontains=q) for q in query_list)
-                    )
-                )
-
-        return queryset
 
 
 class UserList(generics.ListAPIView):
@@ -399,8 +378,8 @@ class UploadView(APIView):
                             raise ValidationError(e, code='auth')
                         except IntegrityError as e:
                             """
-                            An integrity error may happen if two customers have the
-                            same code.
+                            An integrity error may happen if two customers have
+                            the same code.
                             """
                             # print('{0!r}'.format(e))
                             raise ValidationError(e, code='integrity')
