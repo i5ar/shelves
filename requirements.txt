@@ -4,7 +4,7 @@ boto3==1.4.4
 botocore==1.5.69
 certifi==2017.4.17
 chardet==3.0.4
-Django==1.10.7
+Django==1.11.29
 django-annoying==0.10.3
 django-cors-headers==2.1.0
 django-countries==4.5
